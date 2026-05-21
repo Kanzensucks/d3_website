@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A decade of road-crash hospitalisations · 2011–2021</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="map.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <h1>A decade of road-crash hospitalisations, state by state</h1>
+      <p class="standfirst">
+        Hospitalised injuries per 100,000 people, 2011–2021.
+        Three coordinated views — choropleth, ranked bars, and trend lines —
+        share one year. Hover, click to pin a state, or use the keyboard
+        (<kbd>←</kbd>/<kbd>→</kbd> to step, <kbd>Space</kbd> to play/pause).
+      </p>
+    </header>
+
+    <div id="error-banner" class="error-banner" hidden role="alert"></div>
+
+    <!-- ============================ Controls ============================ -->
+    <section id="controls-stage" class="controls" aria-label="Year controls">
+      <button id="play-btn" class="play-btn" type="button"
+              aria-label="Play time-lapse of the years 2011 to 2021"
+              aria-pressed="false">
+        <span class="play-glyph" aria-hidden="true">▶</span>
+        <span class="play-label">Play</span>
+      </button>
+
+      <div class="slider-wrap">
+        <label for="year-slider" class="slider-label">Year</label>
+        <input id="year-slider" type="range"
+               min="2011" max="2021" step="1" value="2011"
+               aria-label="Year (2011 to 2021)"
+               aria-valuemin="2011" aria-valuemax="2021" aria-valuenow="2011" />
+        <div class="slider-ticks" aria-hidden="true">
+          <span>2011</span><span>2013</span><span>2015</span>
+          <span>2017</span><span>2019</span><span>2021</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="speed-select">Speed</label>
+        <select id="speed-select" aria-label="Animation speed">
+          <option value="1800">Slow</option>
+          <option value="1100" selected>Normal</option>
+          <option value="550">Fast</option>
+        </select>
+      </div>
+
+      <div class="control-group" role="radiogroup" aria-label="Colour encoding">
+        <span class="control-label">Encoding</span>
+        <div class="segmented">
+          <button class="seg-btn is-active" data-mode="absolute"
+                  type="button" role="radio" aria-checked="true">Rate</button>
+          <button class="seg-btn" data-mode="delta"
+                  type="button" role="radio" aria-checked="false">vs avg</button>
+        </div>
+      </div>
+
+      <div id="year-readout" class="year-readout" aria-live="polite">2011</div>
+    </section>
+
+    <!-- ============================ Top row ============================ -->
+    <div class="top-row">
+      <section id="map-stage" class="map-stage panel"
+               aria-label="Choropleth map of Australia"></section>
+
+      <section id="race-stage" class="race-stage panel"
+               aria-label="Ranked bar chart of all states for the selected year"></section>
+    </div>
+
+    <!-- =========================== Legend =========================== -->
+    <section id="legend-stage" class="legend-stage panel" aria-hidden="true"></section>
+
+    <!-- ============================ Trend ============================ -->
+    <section id="trend-stage" class="trend-stage panel"
+             aria-label="Decade-long trend lines for each state. Hover to scrub the year.">
+      <div class="trend-header">
+        <h2>How each state moved across the decade</h2>
+        <p class="trend-sub">
+          The thick line is the population-weighted national average.
+          Hover anywhere over this chart to scrub the year on every view.
+          Click a state in any view to pin it.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>
+        Source: AIHW hospitalised road-crash injuries; ABS state populations.
+        Visualisation by Team 99 (Hamish Hooley &amp; Kanzen Ong).
+        Some non-trivial code blocks were generated with the assistance of
+        Claude (GenAI) — those blocks are marked in the source as
+        <code>// GenAI-assisted (Claude)</code>.
+      </p>
+    </footer>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <script src="map.js"></script>
+</body>
+</html>

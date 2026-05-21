@@ -1,0 +1,401 @@
+"year","road_user","state","cases"
+2011,"Bus occupant","NSW",90
+2011,"Bus occupant","Qld",29
+2011,"Bus occupant","SA",14
+2011,"Bus occupant","Vic",39
+2011,"Bus occupant","WA",26
+2011,"Motorcyclist","ACT",144
+2011,"Motorcyclist","NSW",2393
+2011,"Motorcyclist","NT",106
+2011,"Motorcyclist","Qld",1781
+2011,"Motorcyclist","SA",460
+2011,"Motorcyclist","Tas",129
+2011,"Motorcyclist","Vic",1622
+2011,"Motorcyclist","WA",867
+2011,"Other or unknown","NSW",172
+2011,"Other or unknown","NT",24
+2011,"Other or unknown","Qld",143
+2011,"Other or unknown","Vic",151
+2011,"Other or unknown","WA",70
+2011,"Pedal cyclist","ACT",149
+2011,"Pedal cyclist","NSW",1487
+2011,"Pedal cyclist","NT",62
+2011,"Pedal cyclist","Qld",955
+2011,"Pedal cyclist","SA",379
+2011,"Pedal cyclist","Tas",73
+2011,"Pedal cyclist","Vic",1687
+2011,"Pedal cyclist","WA",530
+2011,"Pedestrian","ACT",30
+2011,"Pedestrian","NSW",967
+2011,"Pedestrian","NT",44
+2011,"Pedestrian","Qld",443
+2011,"Pedestrian","SA",176
+2011,"Pedestrian","Tas",45
+2011,"Pedestrian","Vic",739
+2011,"Pedestrian","WA",261
+2012,"Bus occupant","NSW",91
+2012,"Bus occupant","Qld",33
+2012,"Bus occupant","SA",8
+2012,"Bus occupant","Vic",33
+2012,"Bus occupant","WA",24
+2012,"Motorcyclist","ACT",144
+2012,"Motorcyclist","NSW",2626
+2012,"Motorcyclist","NT",118
+2012,"Motorcyclist","Qld",1776
+2012,"Motorcyclist","SA",451
+2012,"Motorcyclist","Tas",124
+2012,"Motorcyclist","Vic",1505
+2012,"Motorcyclist","WA",909
+2012,"Other or unknown","ACT",11
+2012,"Other or unknown","NSW",133
+2012,"Other or unknown","NT",13
+2012,"Other or unknown","Qld",138
+2012,"Other or unknown","SA",61
+2012,"Other or unknown","Tas",7
+2012,"Other or unknown","Vic",103
+2012,"Other or unknown","WA",88
+2012,"Pedal cyclist","ACT",173
+2012,"Pedal cyclist","NSW",1667
+2012,"Pedal cyclist","NT",45
+2012,"Pedal cyclist","Qld",1054
+2012,"Pedal cyclist","SA",401
+2012,"Pedal cyclist","Tas",91
+2012,"Pedal cyclist","Vic",1530
+2012,"Pedal cyclist","WA",587
+2012,"Pedestrian","ACT",27
+2012,"Pedestrian","NSW",955
+2012,"Pedestrian","NT",51
+2012,"Pedestrian","Qld",416
+2012,"Pedestrian","SA",196
+2012,"Pedestrian","Tas",51
+2012,"Pedestrian","Vic",675
+2012,"Pedestrian","WA",242
+2013,"Bus occupant","NSW",82
+2013,"Bus occupant","Qld",37
+2013,"Bus occupant","SA",16
+2013,"Bus occupant","Vic",45
+2013,"Bus occupant","WA",30
+2013,"Motorcyclist","ACT",137
+2013,"Motorcyclist","NSW",2570
+2013,"Motorcyclist","NT",121
+2013,"Motorcyclist","Qld",2047
+2013,"Motorcyclist","SA",455
+2013,"Motorcyclist","Tas",149
+2013,"Motorcyclist","Vic",1521
+2013,"Motorcyclist","WA",958
+2013,"Other or unknown","ACT",5
+2013,"Other or unknown","NSW",162
+2013,"Other or unknown","Qld",140
+2013,"Other or unknown","SA",27
+2013,"Other or unknown","Tas",9
+2013,"Other or unknown","Vic",118
+2013,"Other or unknown","WA",56
+2013,"Pedal cyclist","ACT",174
+2013,"Pedal cyclist","NSW",1835
+2013,"Pedal cyclist","NT",70
+2013,"Pedal cyclist","Qld",1321
+2013,"Pedal cyclist","SA",400
+2013,"Pedal cyclist","Tas",94
+2013,"Pedal cyclist","Vic",1583
+2013,"Pedal cyclist","WA",675
+2013,"Pedestrian","ACT",33
+2013,"Pedestrian","NSW",993
+2013,"Pedestrian","NT",42
+2013,"Pedestrian","Qld",400
+2013,"Pedestrian","SA",172
+2013,"Pedestrian","Tas",43
+2013,"Pedestrian","Vic",673
+2013,"Pedestrian","WA",245
+2014,"Bus occupant","NSW",107
+2014,"Bus occupant","NT",7
+2014,"Bus occupant","Qld",49
+2014,"Bus occupant","SA",8
+2014,"Bus occupant","Vic",57
+2014,"Bus occupant","WA",29
+2014,"Motorcyclist","ACT",102
+2014,"Motorcyclist","NSW",2636
+2014,"Motorcyclist","NT",150
+2014,"Motorcyclist","Qld",2070
+2014,"Motorcyclist","SA",557
+2014,"Motorcyclist","Tas",204
+2014,"Motorcyclist","Vic",1654
+2014,"Motorcyclist","WA",865
+2014,"Other or unknown","NSW",131
+2014,"Other or unknown","Qld",134
+2014,"Other or unknown","SA",16
+2014,"Other or unknown","Tas",9
+2014,"Other or unknown","Vic",115
+2014,"Other or unknown","WA",69
+2014,"Pedal cyclist","ACT",179
+2014,"Pedal cyclist","NSW",1902
+2014,"Pedal cyclist","NT",65
+2014,"Pedal cyclist","Qld",1333
+2014,"Pedal cyclist","SA",494
+2014,"Pedal cyclist","Tas",111
+2014,"Pedal cyclist","Vic",1819
+2014,"Pedal cyclist","WA",657
+2014,"Pedestrian","ACT",20
+2014,"Pedestrian","NSW",1000
+2014,"Pedestrian","NT",59
+2014,"Pedestrian","Qld",372
+2014,"Pedestrian","SA",162
+2014,"Pedestrian","Tas",45
+2014,"Pedestrian","Vic",643
+2014,"Pedestrian","WA",198
+2015,"Bus occupant","ACT",12
+2015,"Bus occupant","NSW",96
+2015,"Bus occupant","Qld",40
+2015,"Bus occupant","SA",6
+2015,"Bus occupant","Vic",60
+2015,"Bus occupant","WA",13
+2015,"Motorcyclist","ACT",145
+2015,"Motorcyclist","NSW",2459
+2015,"Motorcyclist","NT",169
+2015,"Motorcyclist","Qld",2144
+2015,"Motorcyclist","SA",549
+2015,"Motorcyclist","Tas",197
+2015,"Motorcyclist","Vic",1694
+2015,"Motorcyclist","WA",842
+2015,"Other or unknown","NSW",129
+2015,"Other or unknown","Qld",113
+2015,"Other or unknown","SA",32
+2015,"Other or unknown","Tas",9
+2015,"Other or unknown","Vic",122
+2015,"Other or unknown","WA",70
+2015,"Pedal cyclist","ACT",222
+2015,"Pedal cyclist","NSW",1793
+2015,"Pedal cyclist","NT",81
+2015,"Pedal cyclist","Qld",1378
+2015,"Pedal cyclist","SA",517
+2015,"Pedal cyclist","Tas",93
+2015,"Pedal cyclist","Vic",1894
+2015,"Pedal cyclist","WA",621
+2015,"Pedestrian","ACT",27
+2015,"Pedestrian","NSW",951
+2015,"Pedestrian","NT",71
+2015,"Pedestrian","Qld",427
+2015,"Pedestrian","SA",121
+2015,"Pedestrian","Tas",35
+2015,"Pedestrian","Vic",700
+2015,"Pedestrian","WA",204
+2016,"Bus occupant","NSW",114
+2016,"Bus occupant","NT",5
+2016,"Bus occupant","Qld",41
+2016,"Bus occupant","SA",14
+2016,"Bus occupant","Vic",63
+2016,"Bus occupant","WA",21
+2016,"Motorcyclist","ACT",147
+2016,"Motorcyclist","NSW",2648
+2016,"Motorcyclist","NT",151
+2016,"Motorcyclist","Qld",2159
+2016,"Motorcyclist","SA",546
+2016,"Motorcyclist","Tas",171
+2016,"Motorcyclist","Vic",1806
+2016,"Motorcyclist","WA",802
+2016,"Other or unknown","ACT",5
+2016,"Other or unknown","NSW",134
+2016,"Other or unknown","NT",6
+2016,"Other or unknown","Qld",146
+2016,"Other or unknown","SA",46
+2016,"Other or unknown","Tas",15
+2016,"Other or unknown","Vic",173
+2016,"Other or unknown","WA",68
+2016,"Pedal cyclist","ACT",215
+2016,"Pedal cyclist","NSW",1775
+2016,"Pedal cyclist","NT",70
+2016,"Pedal cyclist","Qld",1442
+2016,"Pedal cyclist","SA",527
+2016,"Pedal cyclist","Tas",96
+2016,"Pedal cyclist","Vic",2008
+2016,"Pedal cyclist","WA",652
+2016,"Pedestrian","ACT",28
+2016,"Pedestrian","NSW",964
+2016,"Pedestrian","NT",59
+2016,"Pedestrian","Qld",455
+2016,"Pedestrian","SA",168
+2016,"Pedestrian","Tas",41
+2016,"Pedestrian","Vic",800
+2016,"Pedestrian","WA",166
+2017,"Bus occupant","NSW",109
+2017,"Bus occupant","Qld",28
+2017,"Bus occupant","SA",15
+2017,"Bus occupant","Vic",73
+2017,"Bus occupant","WA",15
+2017,"Motorcyclist","ACT",119
+2017,"Motorcyclist","NSW",2526
+2017,"Motorcyclist","NT",149
+2017,"Motorcyclist","Qld",2208
+2017,"Motorcyclist","SA",531
+2017,"Motorcyclist","Tas",169
+2017,"Motorcyclist","Vic",1979
+2017,"Motorcyclist","WA",931
+2017,"Other or unknown","NSW",137
+2017,"Other or unknown","NT",9
+2017,"Other or unknown","Qld",135
+2017,"Other or unknown","SA",55
+2017,"Other or unknown","Tas",8
+2017,"Other or unknown","Vic",146
+2017,"Other or unknown","WA",87
+2017,"Pedal cyclist","ACT",211
+2017,"Pedal cyclist","NSW",1791
+2017,"Pedal cyclist","NT",74
+2017,"Pedal cyclist","Qld",1542
+2017,"Pedal cyclist","SA",469
+2017,"Pedal cyclist","Tas",107
+2017,"Pedal cyclist","Vic",2089
+2017,"Pedal cyclist","WA",637
+2017,"Pedestrian","ACT",34
+2017,"Pedestrian","NSW",929
+2017,"Pedestrian","NT",79
+2017,"Pedestrian","Qld",439
+2017,"Pedestrian","SA",127
+2017,"Pedestrian","Tas",34
+2017,"Pedestrian","Vic",786
+2017,"Pedestrian","WA",194
+2018,"Bus occupant","NSW",92
+2018,"Bus occupant","Qld",37
+2018,"Bus occupant","SA",9
+2018,"Bus occupant","Vic",73
+2018,"Bus occupant","WA",12
+2018,"Motorcyclist","ACT",161
+2018,"Motorcyclist","NSW",2347
+2018,"Motorcyclist","NT",169
+2018,"Motorcyclist","Qld",2320
+2018,"Motorcyclist","SA",559
+2018,"Motorcyclist","Tas",171
+2018,"Motorcyclist","Vic",1944
+2018,"Motorcyclist","WA",788
+2018,"Other or unknown","ACT",9
+2018,"Other or unknown","NSW",163
+2018,"Other or unknown","NT",7
+2018,"Other or unknown","Qld",131
+2018,"Other or unknown","SA",51
+2018,"Other or unknown","Tas",15
+2018,"Other or unknown","Vic",150
+2018,"Other or unknown","WA",60
+2018,"Pedal cyclist","ACT",217
+2018,"Pedal cyclist","NSW",1681
+2018,"Pedal cyclist","NT",71
+2018,"Pedal cyclist","Qld",1408
+2018,"Pedal cyclist","SA",496
+2018,"Pedal cyclist","Tas",109
+2018,"Pedal cyclist","Vic",2144
+2018,"Pedal cyclist","WA",665
+2018,"Pedestrian","ACT",24
+2018,"Pedestrian","NSW",823
+2018,"Pedestrian","NT",73
+2018,"Pedestrian","Qld",430
+2018,"Pedestrian","SA",148
+2018,"Pedestrian","Tas",59
+2018,"Pedestrian","Vic",830
+2018,"Pedestrian","WA",189
+2019,"Bus occupant","NSW",97
+2019,"Bus occupant","Qld",39
+2019,"Bus occupant","SA",14
+2019,"Bus occupant","Vic",67
+2019,"Bus occupant","WA",16
+2019,"Motorcyclist","ACT",136
+2019,"Motorcyclist","NSW",2565
+2019,"Motorcyclist","NT",153
+2019,"Motorcyclist","Qld",2322
+2019,"Motorcyclist","SA",562
+2019,"Motorcyclist","Tas",148
+2019,"Motorcyclist","Vic",1939
+2019,"Motorcyclist","WA",886
+2019,"Other or unknown","NSW",168
+2019,"Other or unknown","NT",17
+2019,"Other or unknown","Qld",120
+2019,"Other or unknown","SA",23
+2019,"Other or unknown","Tas",11
+2019,"Other or unknown","Vic",169
+2019,"Other or unknown","WA",62
+2019,"Pedal cyclist","ACT",218
+2019,"Pedal cyclist","NSW",1678
+2019,"Pedal cyclist","NT",84
+2019,"Pedal cyclist","Qld",1531
+2019,"Pedal cyclist","SA",526
+2019,"Pedal cyclist","Tas",121
+2019,"Pedal cyclist","Vic",2215
+2019,"Pedal cyclist","WA",735
+2019,"Pedestrian","ACT",22
+2019,"Pedestrian","NSW",858
+2019,"Pedestrian","NT",38
+2019,"Pedestrian","Qld",444
+2019,"Pedestrian","SA",167
+2019,"Pedestrian","Tas",53
+2019,"Pedestrian","Vic",815
+2019,"Pedestrian","WA",227
+2020,"Bus occupant","NSW",64
+2020,"Bus occupant","Qld",22
+2020,"Bus occupant","SA",23
+2020,"Bus occupant","Vic",34
+2020,"Bus occupant","WA",20
+2020,"Motorcyclist","ACT",142
+2020,"Motorcyclist","NSW",2335
+2020,"Motorcyclist","NT",195
+2020,"Motorcyclist","Qld",2447
+2020,"Motorcyclist","SA",583
+2020,"Motorcyclist","Tas",192
+2020,"Motorcyclist","Vic",1682
+2020,"Motorcyclist","WA",949
+2020,"Other or unknown","ACT",12
+2020,"Other or unknown","NSW",138
+2020,"Other or unknown","NT",23
+2020,"Other or unknown","Qld",142
+2020,"Other or unknown","SA",32
+2020,"Other or unknown","Tas",12
+2020,"Other or unknown","Vic",144
+2020,"Other or unknown","WA",74
+2020,"Pedal cyclist","ACT",223
+2020,"Pedal cyclist","NSW",1950
+2020,"Pedal cyclist","NT",108
+2020,"Pedal cyclist","Qld",1684
+2020,"Pedal cyclist","SA",593
+2020,"Pedal cyclist","Tas",133
+2020,"Pedal cyclist","Vic",2645
+2020,"Pedal cyclist","WA",834
+2020,"Pedestrian","ACT",14
+2020,"Pedestrian","NSW",660
+2020,"Pedestrian","NT",56
+2020,"Pedestrian","Qld",414
+2020,"Pedestrian","SA",131
+2020,"Pedestrian","Tas",36
+2020,"Pedestrian","Vic",558
+2020,"Pedestrian","WA",183
+2021,"Bus occupant","NSW",50
+2021,"Bus occupant","NT",5
+2021,"Bus occupant","Qld",38
+2021,"Bus occupant","SA",14
+2021,"Bus occupant","Vic",37
+2021,"Bus occupant","WA",22
+2021,"Motorcyclist","ACT",144
+2021,"Motorcyclist","NSW",2253
+2021,"Motorcyclist","NT",157
+2021,"Motorcyclist","Qld",2598
+2021,"Motorcyclist","SA",556
+2021,"Motorcyclist","Tas",198
+2021,"Motorcyclist","Vic",1967
+2021,"Motorcyclist","WA",882
+2021,"Other or unknown","NSW",164
+2021,"Other or unknown","NT",8
+2021,"Other or unknown","Qld",152
+2021,"Other or unknown","SA",40
+2021,"Other or unknown","Tas",8
+2021,"Other or unknown","Vic",135
+2021,"Other or unknown","WA",71
+2021,"Pedal cyclist","ACT",333
+2021,"Pedal cyclist","NSW",2042
+2021,"Pedal cyclist","NT",92
+2021,"Pedal cyclist","Qld",1504
+2021,"Pedal cyclist","SA",577
+2021,"Pedal cyclist","Tas",118
+2021,"Pedal cyclist","Vic",2695
+2021,"Pedal cyclist","WA",704
+2021,"Pedestrian","ACT",22
+2021,"Pedestrian","NSW",649
+2021,"Pedestrian","NT",58
+2021,"Pedestrian","Qld",448
+2021,"Pedestrian","SA",172
+2021,"Pedestrian","Tas",46
+2021,"Pedestrian","Vic",682
+2021,"Pedestrian","WA",220
