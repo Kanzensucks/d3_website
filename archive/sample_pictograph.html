@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hospital stacks — a pictograph of road trauma</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root{ --bg:#fbf7f1; --panel:#fff; --ink:#1f2933; --ink-soft:#4b5563; --ink-mute:#6b7280;
+           --rule:#e8e0d2; --accent:#b1380b; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter","Segoe UI",sans-serif;padding:24px;line-height:1.5}
+    h1{font-size:1.4rem;margin:0 0 2px}
+    .sub{color:var(--ink-mute);font-size:.9rem;margin:0 0 16px;max-width:80ch}
+    .bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--panel);
+      border:1px solid var(--rule);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+    .play{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:9px 16px;font-weight:700;cursor:pointer;min-width:92px}
+    #yr{flex:1;min-width:170px;accent-color:var(--accent)}
+    .yrnum{font-size:1.5rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+    .key{font-size:.82rem;color:var(--ink-soft);display:flex;align-items:center;gap:8px}
+    .stage{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:10px 8px}
+    svg{display:block;width:100%;height:auto}
+    .code{font-size:13px;font-weight:800;fill:var(--ink);text-anchor:middle}
+    .cap{font-size:11px;font-weight:600;fill:var(--ink-soft);text-anchor:middle;font-variant-numeric:tabular-nums}
+    .sil{stroke:#c9bfa8;stroke-width:.6;}
+    .hwm{stroke:#bcae90;stroke-width:1;stroke-dasharray:3 3}
+    .hwm-t{font-size:8.5px;fill:var(--ink-mute);text-anchor:end}
+  </style>
+</head>
+<body>
+  <h1>One hospital = 25 hospitalisations per 100,000 people</h1>
+  <p class="sub">Each state's stack grows by its <b>rate</b>, not its raw count — so small-population states are
+     compared fairly. The dashed line marks each state's decade peak. Press play to watch the stacks rise.</p>
+
+  <div class="bar">
+    <button class="play" id="play">▶ PLAY</button>
+    <input type="range" id="yr" min="2011" max="2021" step="1" value="2011" />
+    <span class="yrnum" id="yrnum">2011</span>
+    <span class="key" id="key"></span>
+  </div>
+
+  <div class="stage"><svg id="svg" viewBox="0 0 840 470" role="img"
+       aria-label="Pictograph: stacked hospital icons per state, sized by hospitalisation rate."></svg></div>
+
+<script>
+const CODES=["NSW","Vic","Qld","SA","WA","Tas","NT","ACT"];
+const FULL={NSW:"New South Wales",Vic:"Victoria",Qld:"Queensland",SA:"South Australia",
+  WA:"Western Australia",Tas:"Tasmania",NT:"Northern Territory",ACT:"Australian Capital Territory"};
+const UNIT=25;                 // one hospital icon = 25 per 100,000
+
+Promise.all([
+  d3.csv("../data/state_year_per100k.csv",d=>({year:+d.Year,state:d.state,cases:+d.cases,pop:+d.population,rate:+d.cases_per_100k})),
+  d3.json("../data/aus_states.geojson")
+]).then(([rows,geo])=>{
+  const byYear=new Map();
+  rows.forEach(r=>{if(!byYear.has(r.year))byYear.set(r.year,new Map());byYear.get(r.year).set(r.state,r);});
+  const rate=(s,y)=>byYear.get(y).get(s).rate;
+  const rateExt=d3.extent(rows,r=>r.rate);
+  const colOf=v=>d3.interpolateYlOrRd(0.15+0.8*(v-rateExt[0])/(rateExt[1]-rateExt[0]));
+  const decAvg={},peak={};
+  CODES.forEach(c=>{let s=0;for(let y=2011;y<=2021;y++)s+=rate(c,y);decAvg[c]=s/11;peak[c]=d3.max(d3.range(2011,2022),y=>rate(c,y));});
+  const order=CODES.slice().sort((a,b)=>decAvg[b]-decAvg[a]);   // NT first → tall-to-short staircase
+
+  // layout
+  const W=840,H=470, n=order.length, cellW=W/n, BY=360, iconW=30, iconH=22, gap=3;
+  const svg=d3.select("#svg");
+  const defs=svg.append("defs");
+
+  // a reusable hospital icon drawn into a group at (x, yTop)
+  function hospital(parent,x,yTop,col,clip){
+    const g=parent.append("g");
+    if(clip)g.attr("clip-path",`url(#${clip})`);
+    g.append("rect").attr("x",x).attr("y",yTop).attr("width",iconW).attr("height",iconH)
+      .attr("rx",3).attr("fill",col).attr("stroke","#fff").attr("stroke-width",1);
+    // white cross
+    const cw=iconW*0.16,cx=x+iconW/2,cy=yTop+iconH/2,arm=iconH*0.30;
+    g.append("rect").attr("x",cx-cw/2).attr("y",cy-arm).attr("width",cw).attr("height",arm*2).attr("fill","#fff");
+    g.append("rect").attr("x",cx-arm).attr("y",cy-cw/2).attr("width",arm*2).attr("height",cw).attr("fill","#fff");
+    return g;
+  }
+
+  // static per-cell scaffolding: silhouette, code, caption holder, high-water mark
+  const cellG={};
+  order.forEach((code,i)=>{
+    const cx=i*cellW+cellW/2;
+    const g=svg.append("g").attr("data-code",code);
+    cellG[code]=g;
+    // high-water mark (decade peak)
+    const hy=BY-(peak[code]/UNIT)*(iconH+gap);
+    g.append("line").attr("class","hwm").attr("x1",cx-iconW/2-6).attr("x2",cx+iconW/2+6).attr("y1",hy).attr("y2",hy);
+    g.append("text").attr("class","hwm-t").attr("x",cx-iconW/2-8).attr("y",hy+3).text("peak "+peak[code].toFixed(0));
+    // stack holder
+    g.append("g").attr("class","stack");
+    // clip for the partial (top) icon
+    defs.append("clipPath").attr("id","clip-"+code).append("rect").attr("class","clipr");
+    // silhouette below baseline
+    const f=geo.features.find(x=>x.properties.code===code);
+    const proj=d3.geoIdentity().reflectY(true).fitSize([54,40],f);
+    const sp=d3.geoPath(proj);
+    g.append("path").attr("class","sil").attr("d",sp(f))
+      .attr("transform",`translate(${cx-27},${BY+12})`).attr("fill",colOf(decAvg[code])).attr("opacity",.5);
+    g.append("text").attr("class","code").attr("x",cx).attr("y",BY+72).text(code);
+    g.append("text").attr("class","cap").attr("x",cx).attr("y",BY+88);
+  });
+
+  function update(year){
+    order.forEach((code,i)=>{
+      const cx=i*cellW+cellW/2, x=cx-iconW/2;
+      const r=rate(code,year), units=r/UNIT, full=Math.floor(units), frac=units-full;
+      const col=colOf(r);
+      const stack=cellG[code].select("g.stack"); stack.selectAll("*").remove();
+      for(let k=0;k<full;k++){ const yTop=BY-(k+1)*(iconH+gap)+gap; hospital(stack,x,yTop,col,null); }
+      // partial top icon, clipped to reveal bottom `frac`
+      if(frac>0.02){
+        const k=full, yTop=BY-(k+1)*(iconH+gap)+gap, bottom=yTop+iconH;
+        defs.select("#clip-"+code+" rect").attr("x",x).attr("width",iconW)
+          .attr("y",bottom-frac*iconH).attr("height",frac*iconH);
+        hospital(stack,x,yTop,col,"clip-"+code);
+      }
+      cellG[code].select(".cap").text(r.toFixed(0)+" /100k");
+    });
+    document.getElementById("yrnum").textContent=year;
+    document.getElementById("yr").value=year;
+  }
+
+  // legend key icon
+  const keyEl=document.getElementById("key");
+  keyEl.innerHTML=`<svg width="18" height="14"><rect width="18" height="14" rx="2" fill="${colOf(rateExt[1])}"/>
+    <rect x="7.5" y="3" width="3" height="8" fill="#fff"/><rect x="5" y="5.5" width="8" height="3" fill="#fff"/></svg>
+    = ${UNIT} hospitalisations / 100,000 people`;
+
+  // controls
+  let year=2011,timer=null;const play=document.getElementById("play"),sl=document.getElementById("yr");
+  function setYear(y){year=y;update(y);}
+  sl.addEventListener("input",e=>{stop();setYear(+e.target.value);});
+  play.addEventListener("click",()=>timer?stop():start());
+  function start(){play.textContent="❚❚ PAUSE";if(year>=2021)setYear(2011);timer=d3.interval(()=>setYear(year>=2021?2011:year+1),1100);}
+  function stop(){play.textContent="▶ PLAY";if(timer){timer.stop();timer=null;}}
+  setYear(2011);
+});
+</script>
+</body>
+</html>

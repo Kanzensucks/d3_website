@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Wireframe — Chart 2 & About</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #ddd;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 36px 20px;
+}
+
+/* ── page wrapper ── */
+.page-wrap { width: 860px; margin: 0 auto 60px; }
+.page-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #555; margin-bottom: 10px;
+}
+.page-frame {
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(0,0,0,.16);
+  border: 1px solid #bbb;
+}
+
+/* ── nav (matching screenshot style) ── */
+.nav {
+  background: #1e3560;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  height: 48px;
+  gap: 24px;
+}
+.nav-logo { color: #fff; font-size: 13px; font-weight: 700; margin-right: 12px; }
+.nav-link  { color: #c8d4e8; font-size: 12px; text-decoration: none; }
+.nav-link.active { color: #fff; font-weight: 700; }
+
+/* ── page background ── */
+.page-bg { background: #f5f0e8; min-height: 420px; }
+
+/* ── content ── */
+.content { padding: 24px 28px; }
+
+/* ── section card ── */
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+/* ── heading styles ── */
+.h1 { font-size: 18px; font-weight: 700; color: #1e3560; margin-bottom: 14px; }
+.h2 { font-size: 13px; font-weight: 700; color: #1e3560; margin-bottom: 8px; }
+.lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+.body { font-size: 11px; color: #444; line-height: 1.6; }
+.muted { font-size: 10px; color: #888; }
+
+/* ── filter chips (matching screenshot) ── */
+.filters { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.filter-label { font-size: 12px; font-weight: 700; color: #333; }
+.chip {
+  border: 1.5px solid #1e3560;
+  color: #1e3560;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 18px;
+  border-radius: 3px;
+}
+.chip.active { background: #1e3560; color: #fff; }
+
+/* ── placeholder box ── */
+.placeholder {
+  background: #f0ece4;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-style: italic;
+  font-size: 11.5px;
+  text-align: center;
+  padding: 12px;
+}
+
+/* ── footer bar ── */
+.footer-bar {
+  border-top: 1px solid #ddd;
+  background: #faf7f3;
+  padding: 10px 24px;
+  font-size: 10.5px;
+  color: #888;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.footer-link { color: #1e3560; font-weight: 600; }
+
+/* ── layout helpers ── */
+.row { display: flex; gap: 12px; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ CHART 2 — SANKEY -->
+<div class="page-wrap">
+  <div class="page-label">Chart 2 — Sankey Diagram: Where does the road-trauma burden go?</div>
+  <div class="page-frame">
+
+    <div class="nav">
+      <span class="nav-logo">Logo</span>
+      <span class="nav-link">Home</span>
+      <span class="nav-link">Explore Data</span>
+      <span class="nav-link active">Sankey</span>
+      <span class="nav-link">About</span>
+    </div>
+
+    <div class="page-bg">
+      <div class="content">
+
+        <div class="h1">Where does the road-trauma burden go?</div>
+
+        <!-- Filters row -->
+        <div class="filters">
+          <span class="filter-label">Filters:</span>
+          <div class="chip active">Year</div>
+          <div class="chip">Road user</div>
+          <div class="chip">Age group</div>
+          <div class="chip">Sex</div>
+        </div>
+
+        <!-- Sankey diagram placeholder -->
+        <div class="placeholder" style="height: 280px; margin-bottom: 14px; flex-direction: column; gap: 8px;">
+          <div style="font-size: 11px; color: #bbb; font-style: normal; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;">
+            NATIONAL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STATE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BREAKDOWN
+          </div>
+          <!-- Simple flow sketch -->
+          <svg width="680" height="200" viewBox="0 0 680 200" style="opacity:.55">
+            <!-- national node -->
+            <rect x="30" y="30" width="22" height="140" fill="#aaa" rx="2"/>
+            <!-- flows to states -->
+            <path d="M52,40 C180,40 180,25 290,25" fill="none" stroke="#ccc" stroke-width="38" opacity=".8"/>
+            <path d="M52,100 C180,100 180,95 290,90" fill="none" stroke="#e07050" stroke-width="8" opacity=".7"/>
+            <path d="M52,130 C180,130 180,130 290,135" fill="none" stroke="#ccc" stroke-width="22" opacity=".6"/>
+            <path d="M52,158 C180,158 180,165 290,170" fill="none" stroke="#ccc" stroke-width="12" opacity=".5"/>
+            <!-- state nodes -->
+            <rect x="290" y="8"  width="18" height="46" fill="#aaa" rx="2"/>
+            <text x="312" y="34" font-size="9" fill="#666">NSW</text>
+            <rect x="290" y="58" width="18" height="10" fill="#b1380b" rx="2"/>
+            <text x="312" y="67" font-size="9" fill="#b1380b" font-weight="700">NT</text>
+            <rect x="290" y="72" width="18" height="28" fill="#aaa" rx="2"/>
+            <text x="312" y="88" font-size="9" fill="#666">Qld</text>
+            <rect x="290" y="104" width="18" height="18" fill="#aaa" rx="2"/>
+            <text x="312" y="116" font-size="9" fill="#666">WA</text>
+            <rect x="290" y="125" width="18" height="38" fill="#aaa" rx="2"/>
+            <text x="312" y="147" font-size="9" fill="#666">Others</text>
+            <!-- flows to breakdown -->
+            <path d="M308,24 C430,24 430,18 550,18" fill="none" stroke="#ccc" stroke-width="34" opacity=".6"/>
+            <path d="M308,66 C430,66 430,80 550,85" fill="none" stroke="#e07050" stroke-width="6" opacity=".6"/>
+            <path d="M308,145 C430,145 430,160 550,165" fill="none" stroke="#ccc" stroke-width="16" opacity=".5"/>
+            <!-- breakdown nodes -->
+            <rect x="550" y="5"  width="16" height="40" fill="#aaa" rx="2"/>
+            <text x="570" y="26" font-size="9" fill="#666">Vehicle occ.</text>
+            <rect x="550" y="48" width="16" height="22" fill="#e07050" rx="2"/>
+            <text x="570" y="62" font-size="9" fill="#b1380b" font-weight="700">Motorcyclist</text>
+            <rect x="550" y="73" width="16" height="18" fill="#aaa" rx="2"/>
+            <text x="570" y="85" font-size="9" fill="#666">Ped. cyclist</text>
+            <rect x="550" y="94" width="16" height="12" fill="#aaa" rx="2"/>
+            <text x="570" y="104" font-size="9" fill="#666">Pedestrian</text>
+            <rect x="550" y="109" width="16" height="6"  fill="#ddd" rx="2"/>
+            <text x="570" y="117" font-size="9" fill="#999">Bus occ.</text>
+            <rect x="550" y="118" width="16" height="46" fill="#aaa" rx="2"/>
+            <text x="570" y="143" font-size="9" fill="#666">Other</text>
+          </svg>
+          <div style="font-size: 10px; color: #aaa; margin-top: 4px;">Sankey diagram — hover any node or flow to see exact counts and rates</div>
+        </div>
+
+        <!-- Key stats row -->
+        <div class="row" style="margin-bottom:14px;">
+          <div class="card" style="flex:1; margin:0;">
+            <div class="lbl" style="margin-bottom:4px;">National Total</div>
+            <div style="font-size:20px; font-weight:800; color:#1e3560;">39,035</div>
+            <div class="muted">hospitalisations — 2021</div>
+          </div>
+          <div class="card" style="flex:1; margin:0;">
+            <div class="lbl" style="margin-bottom:4px;">Biggest Contributor</div>
+            <div style="font-size:16px; font-weight:700; color:#1e3560;">Victoria</div>
+            <div class="muted">28.5% of national total</div>
+          </div>
+          <div class="card" style="flex:1; margin:0; border-color:#e07050;">
+            <div class="lbl" style="margin-bottom:4px; color:#b1380b;">NT This Year</div>
+            <div style="font-size:20px; font-weight:800; color:#b1380b;">710</div>
+            <div class="muted">1.8% of national · 286.1 /100k</div>
+          </div>
+          <div class="card" style="flex:1; margin:0;">
+            <div class="lbl" style="margin-bottom:4px;">Summary</div>
+            <div class="body" style="color:#555;">Auto-updates with filters<br>Plain-English sentence</div>
+          </div>
+        </div>
+
+        <!-- Caveat -->
+        <div style="background:#fff8f5; border-left:3px solid #e07050; padding:8px 12px; font-size:10px; color:#888; border-radius:0 3px 3px 0;">
+          ⚠ Flow widths represent <em>case counts</em>, not per-capita rates — populous states naturally show wider bands.
+          State-node colour is tinted by per-capita rate so NT magnitude remains visible even when its band is narrow.
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <span class="footer-link">Download CSV</span>
+      <span>·</span>
+      <span>Source: BITRE · ABS</span>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════ ABOUT PAGE -->
+<div class="page-wrap">
+  <div class="page-label">About Page</div>
+  <div class="page-frame">
+
+    <div class="nav">
+      <span class="nav-logo">Logo</span>
+      <span class="nav-link">Home</span>
+      <span class="nav-link">Explore Data</span>
+      <span class="nav-link">Sankey</span>
+      <span class="nav-link active">About</span>
+    </div>
+
+    <div class="page-bg">
+      <div class="content">
+
+        <div class="h1">About this project</div>
+
+        <div class="row">
+          <!-- Left column -->
+          <div class="col" style="flex:1;">
+            <div class="card" style="margin:0;">
+              <div class="h2">Project</div>
+              <div class="body">
+                COS30045 Data Visualisation<br>
+                Swinburne University of Technology<br>
+                Semester 1, 2026
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div class="h2">Team 1</div>
+              <div class="body">
+                Hamish Hooley<br>
+                Kanzen Ong<br><br>
+                Tutorial: Thursday 12:30–2:30pm
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div class="h2">Data Source</div>
+              <div class="body">
+                Bureau of Infrastructure and Transport Research Economics (BITRE)<br>
+                <em>Hospitalised Injuries from Road Crashes, 2023</em><br><br>
+                Australian Bureau of Statistics<br>
+                <em>National, State and Territory Population, 2023</em>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div class="col" style="flex:1;">
+            <div class="card" style="margin:0;">
+              <div class="h2">Technology</div>
+              <div class="body">
+                D3.js v7 (CDN)<br>
+                Vanilla HTML / CSS / JavaScript<br>
+                No framework · No bundler<br>
+                Data processing: KNIME Analytics Platform
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div class="h2">GenAI Declaration</div>
+              <div class="body">
+                Non-trivial code blocks were generated with the assistance of Claude (Anthropic).
+                All AI-assisted blocks are marked <code style="background:#f0f0f0;padding:1px 4px;font-size:10px;">// GenAI-assisted (Claude)</code> in source.
+                All code was reviewed and verified by the team.
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div class="h2">Licence</div>
+              <div class="body">
+                Source data: Creative Commons Attribution 4.0 International (CC BY 4.0)
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <span>Source: BITRE · ABS</span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

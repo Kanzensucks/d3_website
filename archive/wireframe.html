@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Wireframe — Road Crash Injuries in Australia</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #d6d6d6; font-family: Arial, Helvetica, sans-serif; padding: 40px 20px; }
+
+/* ── page wrapper ── */
+.page-wrap { width: 1160px; margin: 0 auto 72px; }
+.page-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: #555; margin-bottom: 10px;
+  padding-left: 4px;
+}
+.page-frame {
+  background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  border: 1px solid #bbb; overflow: hidden;
+}
+
+/* ── nav ── */
+.nav {
+  height: 54px; background: #1a1a1a;
+  display: flex; align-items: center; padding: 0 28px; gap: 0;
+}
+.nav-logo { color: #fff; font-weight: 700; font-size: 13px; margin-right: auto; }
+.nav-link {
+  color: #aaa; font-size: 12px; padding: 18px 18px;
+  border-bottom: 3px solid transparent; cursor: pointer;
+}
+.nav-link.active { color: #fff; border-bottom-color: #e05a2b; }
+
+/* ── generic wireframe box ── */
+.box {
+  background: #f0f0f0; border: 1px solid #c5c5c5;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 8px 10px;
+}
+.box.dashed { border: 2px dashed #aaa; background: #f8f8f8; }
+.box.dark   { background: #2c2c2c; border-color: #111; }
+.box.accent { background: #fff4ef; border: 2px dashed #e05a2b; }
+.box.sea    { background: #d8e8ee; border-color: #b8c8cf; }
+.box.chart  { background: #eef4f8; border: 1px solid #b0c8d4; }
+.box.card   { background: #fafafa; border: 1px solid #ddd; }
+.box.toolbar { background: #fff; border: 1px solid #ddd; padding: 0 16px; }
+
+/* ── labels ── */
+.lbl  { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #666; font-weight: 700; line-height: 1.8; }
+.sub  { font-size: 10px; color: #999; line-height: 1.6; }
+.val  { font-size: 22px; font-weight: 800; color: #1a1a1a; margin: 3px 0; }
+.note { font-size: 9.5px; color: #e05a2b; font-style: italic; margin-top: 4px; }
+.h1   { font-size: 22px; font-weight: 800; color: #111; letter-spacing: -.02em; }
+.h2   { font-size: 14px; font-weight: 500; color: #4b5563; margin: 4px 0; }
+.h3   { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.body-text { font-size: 11px; color: #555; line-height: 1.6; max-width: 640px; }
+.tag  { display:inline-block; background:#1a1a1a; color:#fff; font-size:10px; font-weight:700;
+        padding:3px 10px; border-radius:999px; margin:2px; }
+.tag.pill { background:#f0f0f0; color:#555; border:1px solid #ccc; }
+.tag.on   { background:#e05a2b; color:#fff; }
+.tag.seg  { background:#f3f4f6; color:#4b5563; border:1px solid #ddd; border-radius:999px; padding:4px 12px; font-size:10px; font-weight:700; }
+.tag.seg.active { background:#1a1a1a; color:#fff; }
+.sep { width:1px; background:#ddd; align-self:stretch; margin:8px 10px; }
+.arrow { font-size:11px; color:#e05a2b; font-weight:700; }
+
+/* ── layout helpers ── */
+.row { display:flex; gap:10px; }
+.col { display:flex; flex-direction:column; gap:10px; }
+.content { padding: 18px 24px; }
+.mt4  { margin-top:4px; }
+.mt8  { margin-top:8px; }
+.mt12 { margin-top:12px; }
+.section-divider {
+  margin: 0 24px; border: none; border-top: 1px dashed #ddd;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 1: HOME -->
+<div class="page-wrap">
+<div class="page-title">Page 1 — Home</div>
+<div class="page-frame">
+
+  <nav class="nav">
+    <span class="nav-logo">🚗 Road Crash Injuries AU</span>
+    <span class="nav-link active">Home</span>
+    <span class="nav-link">Chart 1 — State Comparison</span>
+    <span class="nav-link">Chart 2 — Sankey</span>
+    <span class="nav-link">About</span>
+  </nav>
+
+  <div class="content">
+    <!-- Hero -->
+    <div style="padding:24px 0 16px;">
+      <div class="h1">How Bad Is Road Trauma In Australia?<br>Who Does It Most Affect?</div>
+      <div class="body-text mt8">Between 2011 and 2021 over 400,000 Australians were hospitalised as a result of road crash injuries.
+        Explore the trends by year, state, age group, sex, and road user type.</div>
+    </div>
+
+    <!-- 3 Key Stats -->
+    <div class="row" style="margin-bottom:14px;">
+      <div class="box card" style="flex:1;padding:18px 14px;">
+        <div class="lbl">Total Cases — 2021</div>
+        <div class="val">39,035</div>
+        <div class="sub">hospitalised road crash injuries</div>
+      </div>
+      <div class="box card" style="flex:1;padding:18px 14px;">
+        <div class="lbl">Change vs 2020</div>
+        <div class="val" style="color:#1d6f42;">+4.2%</div>
+        <div class="sub">following COVID-19 dip in 2020</div>
+      </div>
+      <div class="box card" style="flex:1;padding:18px 14px;">
+        <div class="lbl">Top Road User Group</div>
+        <div class="val" style="color:#e05a2b;">Motorcyclists</div>
+        <div class="sub">highest single road-user category</div>
+      </div>
+    </div>
+
+    <!-- Chart + Takeaway row -->
+    <div class="row" style="height:280px;">
+      <div class="box chart" style="flex:2; flex-direction:column; align-items:flex-start; padding:16px 20px;">
+        <div class="lbl">National Hospitalisation Trend — 2011 to 2021</div>
+        <div class="sub mt4">Line chart · hover to explore · x-axis = year · y-axis = case count</div>
+        <!-- sketch axes -->
+        <div style="flex:1;width:100%;position:relative;margin-top:12px;">
+          <svg width="100%" height="100%" viewBox="0 0 600 180" preserveAspectRatio="none">
+            <line x1="40" y1="10" x2="40" y2="160" stroke="#bbb" stroke-width="1.5"/>
+            <line x1="40" y1="160" x2="590" y2="160" stroke="#bbb" stroke-width="1.5"/>
+            <!-- y labels -->
+            <text x="32" y="20" text-anchor="end" font-size="10" fill="#999">40k</text>
+            <text x="32" y="70" text-anchor="end" font-size="10" fill="#999">35k</text>
+            <text x="32" y="120" text-anchor="end" font-size="10" fill="#999">30k</text>
+            <!-- x labels -->
+            <text x="50"  y="175" font-size="10" fill="#999">2011</text>
+            <text x="150" y="175" font-size="10" fill="#999">2013</text>
+            <text x="250" y="175" font-size="10" fill="#999">2015</text>
+            <text x="350" y="175" font-size="10" fill="#999">2017</text>
+            <text x="450" y="175" font-size="10" fill="#999">2019</text>
+            <text x="540" y="175" font-size="10" fill="#999">2021</text>
+            <!-- line -->
+            <polyline points="50,130 100,110 155,100 210,90 265,82 320,75 375,68 430,62 485,58 535,80 570,85"
+              fill="none" stroke="#e05a2b" stroke-width="2.5"/>
+            <circle cx="570" cy="85" r="4" fill="#e05a2b"/>
+          </svg>
+        </div>
+      </div>
+      <div class="box accent" style="flex:1; flex-direction:column; align-items:flex-start; padding:20px; justify-content:space-between;">
+        <div>
+          <div class="lbl">📌 Key Finding</div>
+          <div class="h3 mt8">National hospitalisations rose 16% between 2011–2019, before a COVID-related dip in 2020–2021.</div>
+          <div class="body-text mt8">The Northern Territory records rates 1.8–3× the national average every year — a persistent regional inequality.</div>
+        </div>
+        <div style="margin-top:16px;">
+          <div class="tag" style="cursor:pointer;">Explore the data →</div>
+          <div class="note mt4">Links to Chart 1 — State Comparison</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /content -->
+
+</div><!-- /page-frame -->
+</div><!-- /page-wrap -->
+
+
+<!-- ═════════════════════════════════════════════ PAGE 2: CHART 1 — CHOROPLETH -->
+<div class="page-wrap">
+<div class="page-title">Page 2 — Chart 1: State Comparison (Choropleth Map)</div>
+<div class="page-frame">
+
+  <nav class="nav">
+    <span class="nav-logo">🚗 Road Crash Injuries AU</span>
+    <span class="nav-link">Home</span>
+    <span class="nav-link active">Chart 1 — State Comparison</span>
+    <span class="nav-link">Chart 2 — Sankey</span>
+    <span class="nav-link">About</span>
+  </nav>
+
+  <div class="content">
+    <!-- Masthead -->
+    <div style="padding:12px 0 10px;">
+      <div class="h1" style="font-size:18px;">A decade of road-crash hospitalisations, state by state</div>
+      <div class="h2">In 2021, the NT's rate was 286.1/100k — 1.88× the national average</div>
+      <div class="body-text">Hospitalised injuries per 100,000 people, 2011–2021. Slice by sex, age band, or road-user role.
+        Press Space to play, or <strong>click any state</strong> to focus it.</div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="box toolbar" style="height:60px; margin-bottom:10px; flex-direction:row; gap:12px; align-items:center; border-radius:8px;">
+      <div class="tag" style="padding:8px 16px; font-size:11px;">▶ Play</div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Year</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="flex:1; height:4px; background:linear-gradient(to right,#e05a2b 70%,#ddd 70%); border-radius:2px;"></div>
+          <span class="lbl" style="font-size:11px; color:#111; font-weight:700;">2021</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:9px; color:#999;">
+          <span>2011</span><span>2013</span><span>2015</span><span>2017</span><span>2019</span><span>2021</span>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Encoding</div>
+        <div style="display:flex;">
+          <span class="tag seg active">Rate</span>
+          <span class="tag seg">vs avg</span>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Show</div>
+        <div style="display:flex; gap:2px;">
+          <span class="tag seg active">All</span>
+          <span class="tag seg">Sex</span>
+          <span class="tag seg">Age</span>
+          <span class="tag seg">Road user</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Group</div>
+        <div class="tag seg">Motorcyclist ▾</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Speed</div>
+        <div class="tag seg">Normal ▾</div>
+      </div>
+    </div>
+
+    <!-- Main Stage: Map + Detail Card -->
+    <div class="row" style="height:420px;">
+      <!-- Map zone (sea-blue) -->
+      <div class="box sea" style="flex:2; flex-direction:column; align-items:stretch; padding:10px 12px; border-radius:8px;">
+        <!-- Caption row -->
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          <div class="tag">← All states</div>
+          <span style="font-size:11px; color:#111; font-weight:500;">Rate per 100,000 of total state population — all people</span>
+          <span style="font-size:10px; color:#999; font-style:italic;"> · click any state to focus</span>
+        </div>
+        <!-- Map area + legend -->
+        <div class="row" style="flex:1;">
+          <div class="box" style="flex:1; background:#c8dce4; border:1px solid #a0b8c0; position:relative;">
+            <div class="lbl">Choropleth Map</div>
+            <div class="sub">8 states coloured by rate per 100k<br>YlOrRd scale · NT = darkest red</div>
+            <!-- NT label -->
+            <div style="position:absolute;top:38%;left:38%;font-size:9px;font-weight:700;color:#b1380b; background:rgba(255,255,255,.7); padding:2px 6px; border-radius:4px;">NT — 286.1/100k<br>1.88× avg</div>
+          </div>
+          <div style="width:60px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 0;">
+            <div style="width:18px; flex:1; background:linear-gradient(to bottom,#b1380b,#fc8d59,#fee08b,#ffffbf); border-radius:3px;"></div>
+            <div style="font-size:9px; color:#555;">300</div>
+            <div style="width:18px; height:100px; background:linear-gradient(to bottom,#b1380b,#fc8d59,#fee08b); border-radius:3px; display:none;"></div>
+            <div style="font-size:9px; color:#555;">100</div>
+            <div style="font-size:9px; color:#999; text-align:center; margin-top:4px;">Scale:<br>96–337<br>/100k</div>
+          </div>
+        </div>
+        <!-- Compare chips -->
+        <div style="border-top:1px solid #b0c8cf; padding-top:8px; margin-top:8px; font-size:10px; color:#555; display:flex; align-items:center; gap:8px;">
+          <span class="lbl">Compare with</span>
+          <span class="tag pill">NSW</span><span class="tag pill">Vic</span><span class="tag on">Qld</span>
+          <span class="tag pill">SA</span><span class="tag pill">WA</span><span class="tag pill">Tas</span><span class="tag pill">ACT</span>
+        </div>
+      </div>
+
+      <!-- Detail Card -->
+      <div class="box card" style="width:310px; flex-shrink:0; flex-direction:column; align-items:stretch; padding:14px 16px; border-radius:8px; gap:8px;">
+        <div style="font-size:9px; text-transform:uppercase; letter-spacing:1px; color:#999;">Focused state · 2021</div>
+        <div class="h3">Northern Territory</div>
+        <div style="font-size:10px; color:#999; margin-top:-4px;">Rate per 100,000 — all people</div>
+        <!-- Stats 2x2 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Rate</div>
+            <div style="font-size:18px; font-weight:800; color:#e05a2b;">286.1</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Rank</div>
+            <div style="font-size:18px; font-weight:800;">#1</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">vs Natl avg</div>
+            <div style="font-size:14px; font-weight:700; color:#e05a2b;">+134.9 (1.88×)</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Cases</div>
+            <div style="font-size:14px; font-weight:700;">710</div>
+          </div>
+        </div>
+        <!-- Trend chart -->
+        <div class="box chart" style="height:90px; border-radius:6px; flex-direction:column; gap:2px; padding:6px 8px;">
+          <div class="lbl" style="align-self:flex-start;">Decade trend vs national avg</div>
+          <div class="sub" style="align-self:flex-start;">hover chart to explore years</div>
+          <div style="flex:1; width:100%; display:flex; align-items:flex-end; gap:1px; padding:4px 0;">
+            <svg width="100%" height="100%" viewBox="0 0 240 50">
+              <polyline points="0,40 20,38 40,35 60,32 80,28 100,25 120,22 140,18 160,15 180,20 200,22" fill="none" stroke="#e05a2b" stroke-width="2"/>
+              <polyline points="0,30 20,30 40,29 60,28 80,27 100,27 120,26 140,26 160,25 180,27 200,28" fill="none" stroke="#333" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <text x="204" y="23" font-size="9" fill="#e05a2b">NT</text>
+              <text x="204" y="30" font-size="9" fill="#555">Avg</text>
+            </svg>
+          </div>
+        </div>
+        <!-- Breakdown -->
+        <div>
+          <div class="lbl" style="margin-bottom:5px;">Who's getting hurt · Road user</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Motorcyclist</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:48%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">48%</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Pedal cyclist</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:26%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">26%</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Pedestrian</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:19%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">19%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ════════════════════════════════════════ PAGE 2b: COMPARE STRIP MODE -->
+<div class="page-wrap">
+<div class="page-title">Page 2 (cont.) — Chart 1: Compare Strip Mode (after clicking comparison states)</div>
+<div class="page-frame">
+
+  <nav class="nav">
+    <span class="nav-logo">🚗 Road Crash Injuries AU</span>
+    <span class="nav-link">Home</span>
+    <span class="nav-link active">Chart 1 — State Comparison</span>
+    <span class="nav-link">Chart 2 — Sankey</span>
+    <span class="nav-link">About</span>
+  </nav>
+
+  <div class="content">
+    <!-- Caption row -->
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-top:10px;">
+      <div class="tag">← All states</div>
+      <span style="font-size:11px; font-weight:500; color:#111;">Rate per 100,000 of total state population — all people</span>
+    </div>
+
+    <div class="row" style="height:380px;">
+      <!-- Compare strip -->
+      <div style="flex:2; display:flex; flex-direction:column; gap:8px;">
+        <!-- NT (focused) -->
+        <div style="flex:1; background:#fff; border:2px solid #e05a2b; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:10px; font-weight:700; color:#555; margin-bottom:6px;">Northern Territory</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:16px; background:#eee; border-radius:8px;"><div style="width:100%; height:100%; background:#b1380b; border-radius:8px;"></div></div>
+            <span style="font-size:14px; font-weight:800; white-space:nowrap;">286.1 <span style="font-size:9px; font-weight:500; color:#999;">/100k</span></span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#e05a2b; margin-top:3px;">1.88× avg</div>
+        </div>
+        <!-- Qld -->
+        <div style="flex:1; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:10px; font-weight:700; color:#555; margin-bottom:6px;">Queensland</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:16px; background:#eee; border-radius:8px;"><div style="width:70%; height:100%; background:#fc8d59; border-radius:8px;"></div></div>
+            <span style="font-size:14px; font-weight:800; white-space:nowrap;">200.3 <span style="font-size:9px; font-weight:500; color:#999;">/100k</span></span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#e05a2b; margin-top:3px;">1.32× avg</div>
+        </div>
+        <!-- WA -->
+        <div style="flex:1; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:10px; font-weight:700; color:#555; margin-bottom:6px;">Western Australia</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:16px; background:#eee; border-radius:8px;"><div style="width:45%; height:100%; background:#fecc5c; border-radius:8px;"></div></div>
+            <span style="font-size:14px; font-weight:800; white-space:nowrap;">129.8 <span style="font-size:9px; font-weight:500; color:#999;">/100k</span></span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#1d6f42; margin-top:3px;">0.85× avg</div>
+        </div>
+        <!-- NSW -->
+        <div style="flex:1; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px 16px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="font-size:10px; font-weight:700; color:#555; margin-bottom:6px;">New South Wales</div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:16px; background:#eee; border-radius:8px;"><div style="width:39%; height:100%; background:#ffffb2; border-radius:8px; border:1px solid #ddd;"></div></div>
+            <span style="font-size:14px; font-weight:800; white-space:nowrap;">111.2 <span style="font-size:9px; font-weight:500; color:#999;">/100k</span></span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#1d6f42; margin-top:3px;">0.73× avg</div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div style="width:60px; display:flex; flex-direction:column; align-items:center; gap:6px; padding-top:10px;">
+        <div style="width:18px; flex:1; max-height:200px; background:linear-gradient(to bottom,#b1380b,#fc8d59,#fee08b,#ffffbf); border-radius:3px;"></div>
+        <div style="font-size:9px; color:#555; text-align:center;">Scale:<br>96–337<br>/100k</div>
+      </div>
+
+      <!-- Detail card same as above -->
+      <div class="box card" style="width:310px; flex-shrink:0; flex-direction:column; align-items:stretch; padding:14px 16px; border-radius:8px; gap:8px;">
+        <div style="font-size:9px; text-transform:uppercase; letter-spacing:1px; color:#999;">Focused state · 2021</div>
+        <div class="h3">Northern Territory</div>
+        <div style="font-size:10px; color:#999; margin-top:-4px;">Rate per 100,000 — all people</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Rate</div>
+            <div style="font-size:18px; font-weight:800; color:#e05a2b;">286.1</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Rank</div>
+            <div style="font-size:18px; font-weight:800;">#1</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">vs Natl avg</div>
+            <div style="font-size:14px; font-weight:700; color:#e05a2b;">+134.9 (1.88×)</div>
+          </div>
+          <div class="box" style="padding:7px 10px; align-items:flex-start; border-radius:6px;">
+            <div style="font-size:9px; color:#999; text-transform:uppercase;">Cases</div>
+            <div style="font-size:14px; font-weight:700;">710</div>
+          </div>
+        </div>
+        <div class="box chart" style="height:90px; border-radius:6px; flex-direction:column; gap:2px; padding:6px 8px;">
+          <div class="lbl" style="align-self:flex-start;">Decade trend vs national avg</div>
+          <div style="flex:1; width:100%;">
+            <svg width="100%" height="100%" viewBox="0 0 240 50">
+              <polyline points="0,40 20,38 40,35 60,32 80,28 100,25 120,22 140,18 160,15 180,20 200,22" fill="none" stroke="#e05a2b" stroke-width="2"/>
+              <polyline points="0,30 20,30 40,29 60,28 80,27 100,27 120,26 140,26 160,25 180,27 200,28" fill="none" stroke="#333" stroke-width="1.5"/>
+              <text x="204" y="23" font-size="9" fill="#e05a2b">NT</text>
+              <text x="204" y="30" font-size="9" fill="#555">Avg</text>
+            </svg>
+          </div>
+        </div>
+        <div style="border-top:1px solid #eee; padding-top:8px;">
+          <div class="lbl" style="margin-bottom:5px;">Who's getting hurt · Road user</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Motorcyclist</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:48%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">48%</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Pedal cyclist</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:26%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">26%</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:10px;">
+              <span style="width:72px; color:#555; text-align:right;">Pedestrian</span>
+              <div style="flex:1; height:10px; background:#eee; border-radius:5px;"><div style="width:19%; height:100%; background:#c45e3e; border-radius:5px;"></div></div>
+              <span style="width:28px; color:#333; font-weight:700;">19%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare chips -->
+    <div style="border-top:1px solid #eee; padding-top:10px; margin-top:8px; display:flex; align-items:center; gap:8px;">
+      <span class="lbl">Compare with</span>
+      <span class="tag pill">NSW</span><span class="tag pill">Vic</span>
+      <span class="tag on">Qld</span><span class="tag pill">SA</span>
+      <span class="tag on">WA</span><span class="tag pill">Tas</span><span class="tag pill">ACT</span>
+    </div>
+
+  </div>
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ PAGE 3: CHART 2 — SANKEY -->
+<div class="page-wrap">
+<div class="page-title">Page 3 — Chart 2: Sankey Diagram (Planned / In Progress)</div>
+<div class="page-frame">
+
+  <nav class="nav">
+    <span class="nav-logo">🚗 Road Crash Injuries AU</span>
+    <span class="nav-link">Home</span>
+    <span class="nav-link">Chart 1 — State Comparison</span>
+    <span class="nav-link active">Chart 2 — Sankey</span>
+    <span class="nav-link">About</span>
+  </nav>
+
+  <div class="content">
+    <!-- Masthead -->
+    <div style="padding:12px 0 10px;">
+      <div class="h1" style="font-size:18px;">Where does the road-trauma burden go?</div>
+      <div class="h2">National hospitalisations flowing from total → state → demographic breakdown</div>
+      <div class="body-text">Flow widths represent raw case counts. State-node colours are tinted by per-capita rate so the NT still reads as red even when its band is thin.</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="box toolbar" style="height:52px; margin-bottom:12px; flex-direction:row; gap:14px; align-items:center; border-radius:8px;">
+      <div class="tag" style="padding:7px 14px; font-size:11px;">▶ Play</div>
+      <div style="flex:1; display:flex; align-items:center; gap:8px;">
+        <div style="font-size:9px; color:#999; text-transform:uppercase; letter-spacing:1px; white-space:nowrap;">Year</div>
+        <div style="flex:1; height:4px; background:linear-gradient(to right,#e05a2b 80%,#ddd 80%); border-radius:2px;"></div>
+        <span style="font-size:11px; font-weight:700; color:#111;">2021</span>
+      </div>
+      <div class="sep"></div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="sub" style="font-size:9px; text-transform:uppercase; letter-spacing:1px;">Breakdown</div>
+        <div style="display:flex; gap:2px;">
+          <span class="tag seg active">By road user</span>
+          <span class="tag seg">By age group</span>
+          <span class="tag seg">By sex</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sankey + Stats row -->
+    <div class="row" style="height:360px;">
+      <!-- Sankey diagram area -->
+      <div class="box chart" style="flex:1; flex-direction:column; align-items:flex-start; padding:16px 20px; border-radius:8px;">
+        <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:8px;">
+          <span class="lbl">NATIONAL</span>
+          <span class="lbl">STATE</span>
+          <span class="lbl">BY ROAD-USER</span>
+        </div>
+        <!-- Sketch of the sankey -->
+        <div style="flex:1; width:100%; position:relative;">
+          <svg width="100%" height="100%" viewBox="0 0 700 280" preserveAspectRatio="xMidYMid meet">
+            <!-- National node -->
+            <rect x="20" y="40" width="28" height="200" fill="#555" rx="3"/>
+            <text x="52" y="140" font-size="10" fill="#333" font-weight="700">All Australia</text>
+            <text x="52" y="153" font-size="9" fill="#999">39,035</text>
+
+            <!-- Flow bands (simplified) -->
+            <path d="M48,50 C200,50 200,30 340,30" fill="none" stroke="#999" stroke-width="60" opacity=".25"/>
+            <path d="M48,110 C200,110 200,100 340,100" fill="none" stroke="#e05a2b" stroke-width="12" opacity=".5"/>
+            <path d="M48,130 C200,130 200,150 340,160" fill="none" stroke="#fc8d59" stroke-width="30" opacity=".4"/>
+            <path d="M48,165 C200,165 200,200 340,220" fill="none" stroke="#fecc5c" stroke-width="20" opacity=".4"/>
+            <path d="M48,190 C200,190 200,230 340,250" fill="none" stroke="#a0c4a0" stroke-width="14" opacity=".4"/>
+
+            <!-- State nodes -->
+            <rect x="340" y="10" width="20" height="70" fill="#999" rx="2"/>
+            <text x="364" y="48" font-size="9" fill="#555">NSW 9,003</text>
+            <rect x="340" y="85" width="20" height="14" fill="#b1380b" rx="2"/>
+            <text x="364" y="95" font-size="9" fill="#b1380b" font-weight="700">NT 710</text>
+            <rect x="340" y="104" width="20" height="40" fill="#fc8d59" rx="2"/>
+            <text x="364" y="126" font-size="9" fill="#555">Qld 10,447</text>
+            <rect x="340" y="150" width="20" height="30" fill="#fecc5c" rx="2"/>
+            <text x="364" y="168" font-size="9" fill="#555">WA 3,568</text>
+            <rect x="340" y="185" width="20" height="50" fill="#bbb" rx="2"/>
+            <text x="364" y="214" font-size="9" fill="#555">Others…</text>
+
+            <!-- Right flows to road user -->
+            <path d="M360,30 C500,30 500,20 640,20" fill="none" stroke="#888" stroke-width="50" opacity=".2"/>
+            <path d="M360,120 C500,120 500,140 640,140" fill="none" stroke="#e05a2b" stroke-width="10" opacity=".4"/>
+            <path d="M360,200 C500,200 500,200 640,190" fill="none" stroke="#aaa" stroke-width="20" opacity=".3"/>
+
+            <!-- Road user nodes -->
+            <rect x="650" y="10" width="18" height="55" fill="#555" rx="2"/>
+            <text x="672" y="38" font-size="9" fill="#555">Vehicle occ.</text>
+            <rect x="650" y="70" width="18" height="35" fill="#e05a2b" rx="2"/>
+            <text x="672" y="92" font-size="9" fill="#e05a2b" font-weight="700">Motorcyclist</text>
+            <rect x="650" y="110" width="18" height="28" fill="#fc8d59" rx="2"/>
+            <text x="672" y="128" font-size="9" fill="#555">Ped. cyclist</text>
+            <rect x="650" y="143" width="18" height="18" fill="#fecc5c" rx="2"/>
+            <text x="672" y="156" font-size="9" fill="#555">Pedestrian</text>
+            <rect x="650" y="165" width="18" height="8" fill="#ddd" rx="2"/>
+            <text x="672" y="173" font-size="9" fill="#999">Bus occ.</text>
+          </svg>
+        </div>
+        <div class="note">↑ Hover any node or flow to see exact counts and rates</div>
+      </div>
+
+      <!-- Stats panel -->
+      <div style="width:220px; display:flex; flex-direction:column; gap:8px;">
+        <div class="box card" style="flex:1; flex-direction:column; align-items:flex-start; padding:14px; border-radius:8px; gap:4px;">
+          <div class="lbl">National 2021</div>
+          <div class="val" style="font-size:28px;">39,035</div>
+          <div class="sub">hospitalisations</div>
+        </div>
+        <div class="box card" style="flex:1; flex-direction:column; align-items:flex-start; padding:14px; border-radius:8px; gap:4px;">
+          <div class="lbl">Biggest contributor</div>
+          <div class="h3" style="margin-top:4px;">Victoria</div>
+          <div class="sub">28.5% of national</div>
+        </div>
+        <div class="box accent" style="flex:1; flex-direction:column; align-items:flex-start; padding:14px; border-radius:8px; gap:4px;">
+          <div class="lbl">NT this year</div>
+          <div class="val" style="font-size:22px; color:#e05a2b;">710</div>
+          <div class="sub">1.8% of national total<br>286.1 /100k</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; font-size:10px; color:#888; border:1px solid #eee; padding:8px 12px; border-radius:6px; background:#fafafa;">
+      ⚠ Flow widths represent <em>case counts</em>, not per-capita rates — populous states naturally show wider bands.
+      State-node colour is rate-tinted so NT magnitude is still visible.
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ PAGE 4: ABOUT -->
+<div class="page-wrap">
+<div class="page-title">Page 4 — About</div>
+<div class="page-frame">
+
+  <nav class="nav">
+    <span class="nav-logo">🚗 Road Crash Injuries AU</span>
+    <span class="nav-link">Home</span>
+    <span class="nav-link">Chart 1 — State Comparison</span>
+    <span class="nav-link">Chart 2 — Sankey</span>
+    <span class="nav-link active">About</span>
+  </nav>
+
+  <div class="content" style="padding:32px 40px;">
+    <div class="row" style="gap:40px;">
+      <div class="col" style="flex:1; gap:24px;">
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">About this project</div>
+          <div class="body-text">This visualisation was developed as part of COS30045 Data Visualisation at Swinburne University of Technology, Semester 1 2026. The project explores 10 years of hospitalised road crash injury data published by BITRE.</div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">Team 1</div>
+          <div class="body-text">Hamish Hooley<br>Kanzen Ong<br><br>Tutorial: Thursday 12:30–2:30pm</div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">Data source</div>
+          <div class="body-text">Bureau of Infrastructure and Transport Research Economics (BITRE)<br>Hospitalised Injuries from Road Crashes, 2023.<br><br>ABS National, State and Territory Population, 2023.</div>
+        </div>
+      </div>
+      <div class="col" style="flex:1; gap:24px;">
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">Technology</div>
+          <div class="body-text">Built with plain D3.js v7 (CDN), vanilla HTML/CSS/JS. No framework, no bundler. Data processed with KNIME Analytics Platform.</div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">GenAI declaration</div>
+          <div class="body-text">Non-trivial code blocks were generated with the assistance of Claude (Anthropic). All AI-assisted blocks are marked <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:10px;">// GenAI-assisted (Claude)</code> in source. All code was reviewed and verified by the team.</div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom:8px;">Licence</div>
+          <div class="body-text">Source data: Creative Commons Attribution 4.0 International (CC BY 4.0).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

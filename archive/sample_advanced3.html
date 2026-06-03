@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NASA-tier D3 — round 3</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root{ --bg:#05070d; --panel:#0b1018; --rule:#1c2738; --ink:#cdd9e5;
+           --mut:#5e7088; --cyan:#39d0ff; --amber:#ffb454; --red:#ff5a4d; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:"Inter","Segoe UI",-apple-system,sans-serif;padding:24px;
+      background-image:radial-gradient(circle at 50% -10%, #0f1830 0%, #05070d 60%);}
+    .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+    h1{font-size:1.4rem;margin:0 0 2px;letter-spacing:.04em}
+    h1 .tag{color:var(--cyan)}
+    .sub{color:var(--mut);margin:0 0 18px;font-size:.9rem}
+    .hud{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .tele{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--rule);
+      border-radius:10px;padding:10px 12px}
+    .tele .k{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+    .tele .v{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;
+      text-shadow:0 0 12px currentColor}
+    .tele.c .v{color:var(--cyan)} .tele.a .v{color:var(--amber)} .tele.r .v{color:var(--red)}
+    .controls{background:var(--panel);border:1px solid var(--rule);border-radius:10px;
+      padding:12px 16px;display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .play{background:var(--cyan);color:#04121b;border:0;border-radius:8px;padding:9px 16px;
+      font-weight:800;cursor:pointer;min-width:88px;box-shadow:0 0 16px rgba(57,208,255,.5)}
+    #yr{flex:1;accent-color:var(--cyan)}
+    .yrnum{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--cyan);
+      text-shadow:0 0 14px rgba(57,208,255,.6)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;
+      box-shadow:inset 0 0 40px rgba(10,20,40,.6)}
+    .card.wide{grid-column:1 / -1}
+    .card h2{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin:0 0 2px}
+    .card p.desc{font-size:.76rem;color:var(--mut);margin:0 0 8px}
+    canvas,svg{display:block;width:100%;height:auto;border-radius:8px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h1 class="mono">◢ ROAD-TRAUMA <span class="tag">TELEMETRY</span> ◣</h1>
+  <p class="sub">Hospitalisations per 100,000 · 2011–2021 · all panels live on the shared clock</p>
+
+  <div class="hud" id="hud">
+    <div class="tele c"><div class="k">Year</div><div class="v mono" id="t-year">—</div></div>
+    <div class="tele a"><div class="k">National avg /100k</div><div class="v mono" id="t-avg">—</div></div>
+    <div class="tele r"><div class="k">NT rate /100k</div><div class="v mono" id="t-nt">—</div></div>
+    <div class="tele r"><div class="k">NT × average</div><div class="v mono" id="t-mult">—</div></div>
+    <div class="tele c"><div class="k">Worst jurisdiction</div><div class="v mono" id="t-top" style="font-size:1.1rem">—</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="play" id="play">▶ PLAY</button>
+    <input type="range" id="yr" min="2011" max="2021" step="1" value="2011" />
+    <span class="yrnum mono" id="yrnum">2011</span>
+  </div>
+
+  <div class="grid">
+    <div class="card wide"><h2>① Thermal risk field (infrared)</h2>
+      <p class="desc">Continuous danger surface interpolated across the continent. NT burns as the hotspot.</p>
+      <div id="thermal"></div></div>
+
+    <div class="card"><h2>② Spacetime gravity well</h2>
+      <p class="desc">The nation's surface bends under each state's rate. NT punches the deepest crater.</p>
+      <canvas id="well" width="440" height="360"></canvas></div>
+
+    <div class="card"><h2>③ Particle telemetry cartogram</h2>
+      <p class="desc">Each particle ≈ hospitalisations; density per state = caseload. Live drift.</p>
+      <canvas id="parts" width="440" height="360"></canvas></div>
+  </div>
+
+<script>
+const CODES=["NSW","Vic","Qld","SA","WA","Tas","NT","ACT"];
+Promise.all([
+  d3.csv("../data/state_year_per100k.csv", d=>({year:+d.Year,state:d.state,
+    cases:+d.cases,population:+d.population,rate:+d.cases_per_100k})),
+  d3.json("../data/aus_states.geojson")
+]).then(([rows,geo])=>{
+  const byYear=new Map();
+  for(const r of rows){ if(!byYear.has(r.year))byYear.set(r.year,new Map()); byYear.get(r.year).set(r.state,r); }
+  const get=(c,y)=>byYear.get(y).get(c);
+  const rateExt=d3.extent(rows,r=>r.rate);
+  const feat=c=>geo.features.find(f=>f.properties.code===c);
+  const therm=t=>d3.interpolateInferno(0.08+0.85*t); // keep off pure-black end
+  const norm=v=>(v-rateExt[0])/(rateExt[1]-rateExt[0]);
+  const natAvg=y=>{let tc=0,tp=0;for(const c of CODES){const r=get(c,y);tc+=r.cases;tp+=r.population;}return tc/tp*1e5;};
+
+  const updaters=[buildThermal(),buildWell(),buildParticles()];
+
+  let year=2011,timer=null;
+  const slider=document.getElementById("yr"),num=document.getElementById("yrnum"),play=document.getElementById("play");
+  function setYear(y){ year=y; slider.value=y; num.textContent=y; hud(y); updaters.forEach(u=>u(y)); }
+  function hud(y){
+    const avg=natAvg(y), nt=get("NT",y).rate;
+    const top=CODES.map(c=>({c,v:get(c,y).rate})).sort((a,b)=>b.v-a.v)[0];
+    document.getElementById("t-year").textContent=y;
+    document.getElementById("t-avg").textContent=avg.toFixed(0);
+    document.getElementById("t-nt").textContent=nt.toFixed(0);
+    document.getElementById("t-mult").textContent=(nt/avg).toFixed(2)+"×";
+    document.getElementById("t-top").textContent=top.c+" "+top.v.toFixed(0);
+  }
+  slider.addEventListener("input",e=>{stop();setYear(+e.target.value);});
+  play.addEventListener("click",()=>timer?stop():start());
+  function start(){play.textContent="❚❚ PAUSE";if(year>=2021)setYear(2011);
+    timer=d3.interval(()=>setYear(year>=2021?2011:year+1),1200);}
+  function stop(){play.textContent="▶ PLAY";if(timer){timer.stop();timer=null;}}
+  setYear(2011);
+
+  // ---------- ① Thermal risk field ----------
+  function buildThermal(){
+    const W=820,H=380;
+    const proj=d3.geoIdentity().reflectY(true).fitSize([W,H],geo);
+    const path=d3.geoPath(proj);
+    const cents=CODES.map(c=>({c,p:path.centroid(feat(c))}));
+    const svg=d3.select("#thermal").append("svg").attr("viewBox",`0 0 ${W} ${H}`)
+      .style("background","#05070d");
+    // clip to the continent
+    const cid="auclip";
+    svg.append("clipPath").attr("id",cid).selectAll("path").data(geo.features).join("path").attr("d",path);
+    const field=svg.append("g").attr("clip-path",`url(#${cid})`);
+    svg.append("g").selectAll("path").data(geo.features).join("path")
+      .attr("d",path).attr("fill","none").attr("stroke","#26405e").attr("stroke-width",0.7);
+    svg.append("g").selectAll("text").data(cents).join("text")
+      .attr("x",d=>d.p[0]).attr("y",d=>d.p[1]).attr("text-anchor","middle")
+      .attr("fill","#fff").attr("font-size",11).attr("font-weight",700)
+      .attr("opacity",.85).text(d=>d.c);
+    const down=6, gw=Math.ceil(W/down), gh=Math.ceil(H/down);
+    const cpath=d3.geoPath(d3.geoIdentity().scale(down));
+    const thresholds=d3.range(rateExt[0],rateExt[1],(rateExt[1]-rateExt[0])/14);
+    return (y)=>{
+      const vals=new Array(gw*gh);
+      for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){
+        const px=i*down,py=j*down; let num=0,den=0;
+        for(const s of cents){const dx=px-s.p[0],dy=py-s.p[1];const w=1/(dx*dx+dy*dy+40);num+=w*get(s.c,y).rate;den+=w;}
+        vals[j*gw+i]=num/den;
+      }
+      const contours=d3.contours().size([gw,gh]).thresholds(thresholds)(vals);
+      field.selectAll("path").data(contours).join("path")
+        .attr("d",cpath).attr("fill",d=>therm(norm(d.value)));
+    };
+  }
+
+  // ---------- ② Spacetime gravity well ----------
+  function buildWell(){
+    const cv=document.getElementById("well"),ctx=cv.getContext("2d");
+    const W=cv.width,H=cv.height;
+    const proj=d3.geoIdentity().reflectY(true).fitSize([1,1],geo);
+    const path=d3.geoPath(proj);
+    const cents=CODES.map(c=>{const p=path.centroid(feat(c));return {c,u:p[0],v:p[1]};});
+    const N=42, sigma=0.13, cx=W/2, cy=H*0.34, sx=W*0.62, sy=H*0.62, zS=200;
+    function depth(u,v,y){let z=0;for(const s of cents){const du=u-s.u,dv=v-s.v;z+=norm(get(s.c,y).rate)*Math.exp(-(du*du+dv*dv)/(2*sigma*sigma));}return z;}
+    function proj3(u,v,z){const x=u-0.5,yy=v-0.5;return [cx+(x-yy)*sx, cy+(x+yy)*0.5*sy - z*zS];}
+    return (y)=>{
+      ctx.clearRect(0,0,W,H);
+      const Z=[];for(let j=0;j<=N;j++){Z[j]=[];for(let i=0;i<=N;i++)Z[j][i]=depth(i/N,j/N,y);}
+      ctx.lineWidth=1; ctx.shadowBlur=8;
+      const seg=(a,b,z)=>{ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);
+        const col=therm(Math.min(1,z*1.1));ctx.strokeStyle=col;ctx.shadowColor=col;ctx.stroke();};
+      for(let j=0;j<=N;j++)for(let i=0;i<N;i++){const z=(Z[j][i]+Z[j][i+1])/2;
+        seg(proj3(i/N,j/N,Z[j][i]),proj3((i+1)/N,j/N,Z[j][i+1]),z);}
+      for(let i=0;i<=N;i++)for(let j=0;j<N;j++){const z=(Z[j][i]+Z[j+1][i])/2;
+        seg(proj3(i/N,j/N,Z[j][i]),proj3(i/N,(j+1)/N,Z[j+1][i]),z);}
+      ctx.shadowBlur=0;ctx.fillStyle="#fff";ctx.font="700 11px Inter,sans-serif";ctx.textAlign="center";
+      for(const s of cents){const z=depth(s.u,s.v,y);const p=proj3(s.u,s.v,z);ctx.fillText(s.c,p[0],p[1]-4);}
+    };
+  }
+
+  // ---------- ③ Particle telemetry ----------
+  function buildParticles(){
+    const cv=document.getElementById("parts"),ctx=cv.getContext("2d");
+    const W=cv.width,H=cv.height;
+    const proj=d3.geoIdentity().reflectY(true).fitSize([W,H],geo);
+    const path=d3.geoPath(proj);
+    const homes={}; CODES.forEach(c=>{const f=feat(c);const b=path.bounds(f);
+      homes[c]={x:path.centroid(f)[0],y:path.centroid(f)[1],rx:(b[1][0]-b[0][0])/2.6,ry:(b[1][1]-b[0][1])/2.6};});
+    let particles=[];
+    function rebuild(y){
+      const total=d3.sum(CODES,c=>get(c,y).cases), target=1400;
+      particles=[];
+      CODES.forEach(c=>{const n=Math.max(2,Math.round(get(c,y).cases/total*target));
+        const h=homes[c];for(let k=0;k<n;k++)particles.push({c,
+          x:h.x+(Math.random()-.5)*h.rx*2,y:h.y+(Math.random()-.5)*h.ry*2,
+          vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4});});
+    }
+    function frame(){
+      ctx.fillStyle="rgba(5,7,13,0.30)";ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation="lighter";
+      for(const p of particles){const h=homes[p.c];
+        p.vx+=(h.x-p.x)*0.0008+(Math.random()-.5)*.08; p.vy+=(h.y-p.y)*0.0008+(Math.random()-.5)*.08;
+        p.vx*=.94;p.vy*=.94;p.x+=p.vx;p.y+=p.vy;
+        const col=therm(norm(get(p.c,curY).rate));
+        ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,1.4,0,7);ctx.fill();}
+      ctx.globalCompositeOperation="source-over";
+      raf=requestAnimationFrame(frame);
+    }
+    // faint outlines (static layer drawn each frame would flicker; draw once on an overlay via stroke)
+    let curY=2011,raf=null;
+    rebuild(2011); frame();
+    return (y)=>{ curY=y; rebuild(y); };
+  }
+});
+</script>
+</body>
+</html>

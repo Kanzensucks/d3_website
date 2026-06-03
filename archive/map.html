@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>A decade of road-crash hospitalisations · 2011–2021</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="map.css" />
+  <link rel="stylesheet" href="map.css?v=3" />
 </head>
 <body>
   <main class="page">
@@ -13,9 +13,9 @@
       <h1>A decade of road-crash hospitalisations, state by state</h1>
       <p class="standfirst">
         Hospitalised injuries per 100,000 people, 2011–2021.
-        Three coordinated views — choropleth, ranked bars, and trend lines —
-        share one year. Hover, click to pin a state, or use the keyboard
-        (<kbd>←</kbd>/<kbd>→</kbd> to step, <kbd>Space</kbd> to play/pause).
+        Press <kbd>Space</kbd> to play the decade, or
+        <strong>click any state</strong> to focus it — then add others to compare
+        them side by side.
       </p>
     </header>
 
@@ -64,30 +64,37 @@
       <div id="year-readout" class="year-readout" aria-live="polite">2011</div>
     </section>
 
-    <!-- ============================ Top row ============================ -->
-    <div class="top-row">
+    <!-- ===================== Stage: map + detail card ===================== -->
+    <div class="stage-row">
       <section id="map-stage" class="map-stage panel"
-               aria-label="Choropleth map of Australia"></section>
+               aria-label="Choropleth map of Australia. Click a state to focus it.">
+        <button id="reset-btn" class="reset-btn" type="button" hidden
+                aria-label="Zoom back out to the whole country">← Back to all states</button>
 
-      <section id="race-stage" class="race-stage panel"
-               aria-label="Ranked bar chart of all states for the selected year"></section>
+        <div class="map-main">
+          <div class="map-area">
+            <!-- Full map / single focused state. -->
+            <div id="map-holder" class="map-holder"></div>
+            <!-- Side-by-side comparison shapes (shown only while comparing). -->
+            <div id="compare-holder" class="compare-holder" hidden></div>
+          </div>
+          <div id="legend-stage" class="legend-stage" aria-hidden="true"></div>
+        </div>
+
+        <!-- "Compare with" bubbles live in the map box; shown once a state is focused. -->
+        <div id="map-compare-bar" class="map-compare-bar" hidden>
+          <span class="compare-label">Compare with</span>
+          <div id="compare-chips" class="compare-chips"></div>
+        </div>
+      </section>
+
+      <!-- Detail card: hidden until a state is selected. -->
+      <aside id="detail-card" class="detail-card panel" hidden aria-live="polite">
+        <button id="detail-close" class="detail-close" type="button"
+                aria-label="Close detail panel">×</button>
+        <div id="detail-body"></div>
+      </aside>
     </div>
-
-    <!-- =========================== Legend =========================== -->
-    <section id="legend-stage" class="legend-stage panel" aria-hidden="true"></section>
-
-    <!-- ============================ Trend ============================ -->
-    <section id="trend-stage" class="trend-stage panel"
-             aria-label="Decade-long trend lines for each state. Hover to scrub the year.">
-      <div class="trend-header">
-        <h2>How each state moved across the decade</h2>
-        <p class="trend-sub">
-          The thick line is the population-weighted national average.
-          Hover anywhere over this chart to scrub the year on every view.
-          Click a state in any view to pin it.
-        </p>
-      </div>
-    </section>
 
     <footer class="footer">
       <p>
@@ -100,7 +107,6 @@
     </footer>
   </main>
 
-  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
-  <script src="map.js"></script>
+  <script src="map.js?v=3"></script>
 </body>
 </html>

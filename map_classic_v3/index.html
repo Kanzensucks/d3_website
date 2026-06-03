@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- T16: clean title -->
+  <title>A decade of road-crash hospitalisations · 2011–2021</title>
+
+  <!-- T17: OG / Twitter card -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="A decade of road-crash hospitalisations" />
+  <meta property="og:description" content="The NT's rate runs 1.8–3× the national average, 2011–2021. Explore by sex, age or road-user role." />
+  <meta name="twitter:card"       content="summary" />
+  <meta name="twitter:title"      content="A decade of road-crash hospitalisations" />
+  <meta name="twitter:description" content="The NT's rate runs 1.8–3× the national average, 2011–2021." />
+
+  <!-- T17: inline SVG favicon — NT red square with "NT" text -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b1380b'/%3E%3Ctext x='4' y='22' font-size='16' font-weight='700' fill='white' font-family='sans-serif'%3ENT%3C/text%3E%3C/svg%3E" />
+
+  <!-- T18: preload all data fetches -->
+  <link rel="preload" href="../data/state_year_per100k.csv" as="fetch" crossorigin />
+  <link rel="preload" href="../data/aus_states.geojson"     as="fetch" crossorigin />
+  <link rel="preload" href="../data/state_year_age.csv"     as="fetch" crossorigin />
+  <link rel="preload" href="../data/state_year_sex.csv"     as="fetch" crossorigin />
+  <link rel="preload" href="../data/state_year_roaduser.csv" as="fetch" crossorigin />
+  <link rel="preload" href="../data/population_clean.csv"   as="fetch" crossorigin />
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="map_classic_v3.css?v=1" />
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <h1>A decade of road-crash hospitalisations, state by state</h1>
+      <!-- T3: live narrative headline below H1 -->
+      <h2 id="narrative-h2" class="narrative-h2"></h2>
+      <p class="standfirst">
+        Hospitalised injuries per 100,000 people, 2011–2021.
+        Slice by <strong>sex</strong>, <strong>age band</strong>, or
+        <strong>road-user role</strong>.
+        Press <kbd>Space</kbd> to play, or
+        <strong>click any state</strong> to focus it.
+      </p>
+    </header>
+
+    <div id="error-banner" class="error-banner" hidden role="alert"></div>
+
+    <!-- T8: single merged toolbar (was separate filter-bar + controls) -->
+    <div id="toolbar" class="toolbar" role="region" aria-label="Year and demographic controls">
+
+      <!-- Primary tier: play, slider, encoding -->
+      <div class="toolbar-primary">
+        <button id="play-btn" class="play-btn" type="button"
+                aria-label="Play time-lapse of the years 2011 to 2021"
+                aria-pressed="false">
+          <span class="play-glyph" aria-hidden="true">▶</span>
+          <span class="play-label">Play</span>
+        </button>
+
+        <div class="slider-wrap">
+          <label for="year-slider" class="slider-label">Year</label>
+          <div class="slider-row">
+            <input id="year-slider" type="range"
+                   min="2011" max="2021" step="1" value="2021"
+                   aria-label="Year (2011 to 2021)"
+                   aria-valuemin="2011" aria-valuemax="2021" aria-valuenow="2021" />
+            <!-- T4: year readout as small inline label -->
+            <span id="year-readout" aria-live="polite">2021</span>
+          </div>
+          <div class="slider-ticks" aria-hidden="true">
+            <span>2011</span><span>2013</span><span>2015</span>
+            <span>2017</span><span>2019</span><span>2021</span>
+          </div>
+        </div>
+
+        <div class="control-group" role="radiogroup" aria-label="Colour encoding">
+          <span class="control-label">Encoding</span>
+          <div class="segmented">
+            <button class="seg-btn is-active" data-mode="absolute"
+                    type="button" role="radio" aria-checked="true">Rate</button>
+            <button class="seg-btn" data-mode="delta"
+                    type="button" role="radio" aria-checked="false">vs avg</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- T8: 1px vertical rule divider -->
+      <div class="toolbar-divider" aria-hidden="true"></div>
+
+      <!-- Secondary tier: demographic slice, speed -->
+      <div class="toolbar-secondary">
+        <div class="control-group" role="radiogroup" aria-label="Demographic dimension">
+          <span class="control-label">Show</span>
+          <div class="segmented">
+            <button class="dim-btn is-active" data-dim="all"      type="button" role="radio" aria-checked="true">All</button>
+            <button class="dim-btn"           data-dim="sex"      type="button" role="radio" aria-checked="false">Sex</button>
+            <button class="dim-btn"           data-dim="age"      type="button" role="radio" aria-checked="false">Age</button>
+            <button class="dim-btn"           data-dim="roaduser" type="button" role="radio" aria-checked="false">Road user</button>
+          </div>
+        </div>
+
+        <!-- T21: custom popover replaces native <select> -->
+        <div id="dim-value-wrap" class="control-group" hidden>
+          <span class="control-label">Group</span>
+          <div class="popover-wrap">
+            <button id="dim-value-btn" class="popover-trigger" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span id="dim-value-label">Female</span>
+              <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="dim-value-popover" class="popover-menu" hidden role="listbox"></div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="control-label">Speed</span>
+          <div class="popover-wrap">
+            <button id="speed-btn" class="popover-trigger" type="button"
+                    aria-haspopup="listbox" aria-expanded="false">
+              <span id="speed-label">Normal</span>
+              <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+            <div id="speed-popover" class="popover-menu" hidden role="listbox"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Stage: map + detail card ===================== -->
+    <div class="stage-row">
+      <section id="map-stage" class="map-stage panel"
+               aria-label="Choropleth map of Australia. Click a state to focus it.">
+
+        <!-- T13: NT story pill (shown when non-NT state focused) -->
+        <button id="nt-pill" class="nt-pill" type="button" hidden
+                aria-label="Return focus to the Northern Territory">NT story ↑</button>
+
+        <div class="map-main">
+          <div class="map-area">
+            <!-- Caption row: reset button lives inline here so it never overlaps the map -->
+            <div class="map-caption-row" id="filter-caption">
+              <button id="reset-btn" class="reset-btn-inline" type="button" hidden
+                      aria-label="Zoom back out to the whole country">← All states</button>
+              <span id="filter-caption-text">Rate per 100,000 of total state population — all people</span>
+              <span class="caption-hint" id="caption-hint"> · click any state to focus</span>
+            </div>
+            <!-- T11: stratified caveat ribbon (shown when dim ≠ all) -->
+            <div id="caveat-ribbon" class="caveat-ribbon" hidden role="note">
+              ⚠ Rates use total state population, not per-<span id="caveat-dim">dimension</span> denominators. Read relative shape, not absolute risk.
+            </div>
+            <!-- Full map / single focused state -->
+            <div id="map-holder" class="map-holder">
+              <!-- T25: floating hover tooltip -->
+              <div id="map-tooltip" class="map-tooltip" hidden></div>
+            </div>
+            <!-- Side-by-side comparison shapes -->
+            <div id="compare-holder" class="compare-holder" hidden></div>
+          </div>
+
+          <!-- Legend column (caption removed from here per T22) -->
+          <div class="legend-col">
+            <div id="legend-stage" class="legend-stage" aria-hidden="true"></div>
+            <div id="legend-range-chip" class="legend-range-chip"></div>
+          </div>
+        </div>
+
+        <!-- "Compare with" bubbles — shown once a state is focused -->
+        <div id="map-compare-bar" class="map-compare-bar" hidden>
+          <span class="compare-label">Compare with</span>
+          <div id="compare-chips" class="compare-chips"></div>
+        </div>
+      </section>
+
+      <!-- Detail card: hidden until a state is selected -->
+      <aside id="detail-card" class="detail-card panel" hidden aria-live="polite">
+        <button id="detail-close" class="detail-close" type="button"
+                aria-label="Close detail panel">×</button>
+        <div id="detail-body"></div>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <p>
+        Source: AIHW hospitalised road-crash injuries; ABS state populations.
+        Visualisation by Team 99 (Hamish Hooley &amp; Kanzen Ong).
+        Rates are always per 100,000 of <em>total</em> state population
+        (no stratified denominators available).
+        Non-trivial code blocks generated with Claude (GenAI) are marked
+        <code>// GenAI-assisted (Claude)</code> in source.
+      </p>
+    </footer>
+  </main>
+
+  <script src="map_classic_v3.js?v=1"></script>
+</body>
+</html>

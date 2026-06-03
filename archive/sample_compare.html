@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Comparison layout samples</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root{ --bg:#fbf7f1; --panel:#fff; --ink:#1f2933; --ink-soft:#4b5563;
+           --ink-mute:#6b7280; --rule:#e8e0d2; --accent:#b1380b; --blue:#2563eb; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:"Inter","Segoe UI",-apple-system,sans-serif;padding:32px;}
+    h1{font-size:1.4rem;margin:0 0 4px}
+    .sub{color:var(--ink-mute);margin:0 0 28px;font-size:.95rem}
+    .opt{background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+      padding:18px 20px;margin-bottom:22px;max-width:560px}
+    .opt h2{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--accent);margin:0 0 14px}
+    /* ---- Option 1: mini cards ---- */
+    .cards{display:flex;align-items:center;gap:14px;justify-content:center}
+    .mini{flex:1;border:1px solid var(--rule);border-radius:10px;padding:12px;text-align:center;background:#faf3e3}
+    .mini h3{margin:0 0 6px;font-size:1rem}
+    .mini .big{font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums}
+    .mini.nt .big{color:var(--accent)}
+    .mini.nsw .big{color:var(--blue)}
+    .mini .unit{font-size:.7rem;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.08em}
+    .mini svg.shape{height:70px;display:block;margin:0 auto 6px}
+    .ratio{font-weight:800;font-size:1.05rem;white-space:nowrap}
+    .ratio small{display:block;font-weight:500;font-size:.72rem;color:var(--ink-mute)}
+    /* ---- Option 2: table ---- */
+    table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+    th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--rule)}
+    th:first-child,td:first-child{text-align:left;color:var(--ink-mute);
+      font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+    thead th{font-size:1rem}
+    thead th.nt{color:var(--accent)} thead th.nsw{color:var(--blue)}
+    .tratio{margin-top:12px;text-align:center;font-weight:800;font-size:1.05rem}
+    /* ---- Option 3: dumbbell ---- */
+    .dumb svg{display:block;width:100%;height:auto}
+  </style>
+</head>
+<body>
+  <h1>Comparison layout samples — NT vs NSW, 2021</h1>
+  <p class="sub">Real data. Pick the one you like; I'll wire it into the card.</p>
+
+  <div class="opt">
+    <h2>Option 1 — Mini state cards + ratio</h2>
+    <div class="cards" id="opt1"></div>
+  </div>
+
+  <div class="opt">
+    <h2>Option 2 — Comparison table + ratio</h2>
+    <div id="opt2"></div>
+  </div>
+
+  <div class="opt">
+    <h2>Option 3 — Dumbbell gap chart</h2>
+    <div class="dumb" id="opt3"></div>
+  </div>
+
+<script>
+const YEAR=2021, FULL={NT:"Northern Territory",NSW:"New South Wales"};
+Promise.all([
+  d3.csv("../data/state_year_per100k.csv", d=>({year:+d.Year,state:d.state,
+    cases:+d.cases,population:+d.population,rate:+d.cases_per_100k})),
+  d3.json("../data/aus_states.geojson")
+]).then(([rows,geo])=>{
+  const byState=new Map();
+  for(const r of rows){ if(!byState.has(r.state))byState.set(r.state,[]); byState.get(r.state).push(r);}
+  for(const a of byState.values())a.sort((p,q)=>p.year-q.year);
+  // national pop-weighted avg per year
+  const natl=new Map();
+  d3.groups(rows,r=>r.year).forEach(([y,rs])=>{
+    const tc=d3.sum(rs,r=>r.cases),tp=d3.sum(rs,r=>r.population);
+    natl.set(y,tc/tp*1e5);
+  });
+  const get=(c)=>byState.get(c).find(r=>r.year===YEAR);
+  const nt=get("NT"), nsw=get("NSW"), avg=natl.get(YEAR);
+  const ratio=(nt.rate/nsw.rate).toFixed(1);
+
+  // ---------- Option 1: mini cards ----------
+  function shapeSVG(code){
+    const f=geo.features.find(x=>x.properties.code===code);
+    const proj=d3.geoIdentity().reflectY(true).fitSize([90,70],f);
+    const path=d3.geoPath(proj);
+    const col=code==="NT"?"#b1380b":"#2563eb";
+    return `<svg class="shape" viewBox="0 0 90 70"><path d="${path(f)}" fill="${col}" opacity="0.18" stroke="${col}" stroke-width="1"/></svg>`;
+  }
+  function spark(code,col){
+    const a=byState.get(code), w=120,h=30;
+    const x=d3.scaleLinear().domain([2011,2021]).range([2,w-2]);
+    const y=d3.scaleLinear().domain([d3.min(a,d=>d.rate)*.9,d3.max(a,d=>d.rate)*1.05]).range([h-3,3]);
+    const line=d3.line().x(d=>x(d.year)).y(d=>y(d.rate))(a);
+    return `<svg width="${w}" height="${h}"><path d="${line}" fill="none" stroke="${col}" stroke-width="1.6"/></svg>`;
+  }
+  document.getElementById("opt1").innerHTML=`
+    <div class="mini nt"><h3>NT</h3>${shapeSVG("NT")}
+      <div class="big">${nt.rate.toFixed(1)}</div><div class="unit">per 100k</div>
+      ${spark("NT","#b1380b")}</div>
+    <div class="ratio">${ratio}×<small>NT vs NSW</small></div>
+    <div class="mini nsw"><h3>NSW</h3>${shapeSVG("NSW")}
+      <div class="big">${nsw.rate.toFixed(1)}</div><div class="unit">per 100k</div>
+      ${spark("NSW","#2563eb")}</div>`;
+
+  // ---------- Option 2: table ----------
+  const fmt=d3.format(",.0f"), f1=d3.format(",.1f");
+  const rank=(c)=>{
+    const order=[...byState.keys()].map(k=>({k,v:get(k).rate})).sort((a,b)=>b.v-a.v);
+    return order.findIndex(o=>o.k===c)+1;
+  };
+  document.getElementById("opt2").innerHTML=`
+    <table>
+      <thead><tr><th></th><th class="nt">NT</th><th class="nsw">NSW</th></tr></thead>
+      <tbody>
+        <tr><td>Rate /100k</td><td>${f1(nt.rate)}</td><td>${f1(nsw.rate)}</td></tr>
+        <tr><td>Rank (of 8)</td><td>#${rank("NT")}</td><td>#${rank("NSW")}</td></tr>
+        <tr><td>vs national avg</td><td>+${f1(nt.rate-avg)}</td><td>${f1(nsw.rate-avg)}</td></tr>
+        <tr><td>Hospitalisations</td><td>${fmt(nt.cases)}</td><td>${fmt(nsw.cases)}</td></tr>
+        <tr><td>Population</td><td>${fmt(nt.population)}</td><td>${fmt(nsw.population)}</td></tr>
+      </tbody>
+    </table>
+    <div class="tratio">NT's rate is ${ratio}× NSW's</div>`;
+
+  // ---------- Option 3: dumbbell ----------
+  const W=520,H=90,m={l:50,r:50,t:40,b:24};
+  const iw=W-m.l-m.r;
+  const x=d3.scaleLinear().domain([0,d3.max([nt.rate,nsw.rate])*1.1]).range([0,iw]);
+  const svg=d3.select("#opt3").append("svg").attr("viewBox",`0 0 ${W} ${H}`);
+  const g=svg.append("g").attr("transform",`translate(${m.l},${m.t})`);
+  g.append("line").attr("x1",x(nsw.rate)).attr("x2",x(nt.rate)).attr("y1",10).attr("y2",10)
+    .attr("stroke","#bbb").attr("stroke-width",3);
+  g.append("circle").attr("cx",x(nsw.rate)).attr("cy",10).attr("r",7).attr("fill","#2563eb");
+  g.append("circle").attr("cx",x(nt.rate)).attr("cy",10).attr("r",7).attr("fill","#b1380b");
+  g.append("text").attr("x",x(nsw.rate)).attr("y",-6).attr("text-anchor","middle").attr("font-size",12).attr("fill","#2563eb").attr("font-weight",700).text(`NSW ${f1(nsw.rate)}`);
+  g.append("text").attr("x",x(nt.rate)).attr("y",-6).attr("text-anchor","middle").attr("font-size",12).attr("fill","#b1380b").attr("font-weight",700).text(`NT ${f1(nt.rate)}`);
+  g.append("text").attr("x",(x(nsw.rate)+x(nt.rate))/2).attr("y",34).attr("text-anchor","middle").attr("font-size",11).attr("fill","#6b7280").text(`gap ${f1(nt.rate-nsw.rate)} per 100k  ·  ${ratio}×`);
+  g.append("g").attr("transform","translate(0,46)").call(d3.axisBottom(x).ticks(5)).selectAll("text").attr("font-size",9);
+});
+</script>
+</body>
+</html>

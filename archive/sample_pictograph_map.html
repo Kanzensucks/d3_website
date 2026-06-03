@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Map + hospital pictograph on select</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root{ --bg:#fbf7f1; --panel:#fff; --ink:#1f2933; --ink-soft:#4b5563; --ink-mute:#6b7280;
+           --rule:#e8e0d2; --accent:#b1380b; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter","Segoe UI",sans-serif;padding:24px;line-height:1.5}
+    h1{font-size:1.3rem;margin:0 0 2px}
+    .sub{color:var(--ink-mute);font-size:.88rem;margin:0 0 14px}
+    .bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--panel);
+      border:1px solid var(--rule);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+    .play{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:8px 15px;font-weight:700;cursor:pointer;min-width:88px}
+    #yr{flex:1;min-width:160px;accent-color:var(--accent)}
+    .yrnum{font-size:1.4rem;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+    .key{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+    .row{display:grid;grid-template-columns:1fr;gap:16px;transition:grid-template-columns .3s ease}
+    .row.has-detail{grid-template-columns:1.35fr 1fr}
+    @media(max-width:900px){.row.has-detail{grid-template-columns:1fr}}
+    .panel{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:14px}
+    .map-stage{position:relative}
+    .map-stage svg{display:block;width:100%;height:auto;max-height:74vh}
+    .hint{position:absolute;left:16px;top:14px;font-size:.78rem;color:var(--ink-mute)}
+    .state{stroke:#fff;stroke-width:1px;cursor:pointer;transition:opacity .3s ease}
+    .state.dim{opacity:.2}.state.sel{stroke:#1f2933;stroke-width:2px}
+    .legend svg{display:block;width:100%;max-width:420px;height:auto;margin-top:6px}
+    .legend-axis text{font-size:9px;fill:var(--ink-soft)}.legend-axis path,.legend-axis line{stroke:var(--ink-soft)}
+    .legtitle{font-size:10px;text-transform:uppercase;letter-spacing:.08em;fill:var(--ink-mute)}
+    /* detail */
+    .dclose{float:right;border:0;background:#f2ead8;color:var(--ink-soft);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:1rem}
+    .deyebrow{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);margin:0}
+    .dtitle{font-size:1.3rem;font-weight:700;margin:2px 0 2px}
+    .dhead{font-size:1.05rem;font-weight:800;color:var(--accent);margin:0 0 10px}
+    .stacks{display:flex;gap:18px;align-items:flex-end;justify-content:center;min-height:240px;margin:6px 0 10px}
+    .stackcol{text-align:center}
+    .stacklab{font-size:.8rem;font-weight:700;margin-top:6px}
+    .stackval{font-size:.74rem;color:var(--ink-mute);font-variant-numeric:tabular-nums}
+    .cmplabel{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-mute);margin:8px 0 6px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{border:1px solid var(--rule);background:#faf3e3;color:var(--ink-soft);border-radius:999px;
+      padding:5px 11px;font-size:.78rem;font-weight:700;cursor:pointer}
+    .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .empty{color:var(--ink-mute);font-size:.95rem;text-align:center;padding:60px 10px}
+  </style>
+</head>
+<body>
+  <h1>Click a state — its hospital stack appears, next to a comparison</h1>
+  <p class="sub">The map shows the rate by colour; selecting a state turns that rate into a stack of hospital icons
+     (one icon = 25 per 100,000) and compares it side by side. Scrub the years to watch both stacks change.</p>
+
+  <div class="bar">
+    <button class="play" id="play">▶ PLAY</button>
+    <input type="range" id="yr" min="2011" max="2021" step="1" value="2011" />
+    <span class="yrnum" id="yrnum">2011</span>
+    <span class="key" id="key"></span>
+  </div>
+
+  <div class="row" id="row">
+    <div class="panel map-stage">
+      <div class="hint">click any state</div>
+      <div id="map"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="panel" id="detail" hidden></aside>
+  </div>
+
+<script>
+const CODES=["NSW","Vic","Qld","SA","WA","Tas","NT","ACT"];
+const FULL={NSW:"New South Wales",Vic:"Victoria",Qld:"Queensland",SA:"South Australia",
+  WA:"Western Australia",Tas:"Tasmania",NT:"Northern Territory",ACT:"Australian Capital Territory"};
+const UNIT=25;
+
+Promise.all([
+  d3.csv("../data/state_year_per100k.csv",d=>({year:+d.Year,state:d.state,cases:+d.cases,pop:+d.population,rate:+d.cases_per_100k})),
+  d3.json("../data/aus_states.geojson")
+]).then(([rows,geo])=>{
+  const byYear=new Map();
+  rows.forEach(r=>{if(!byYear.has(r.year))byYear.set(r.year,new Map());byYear.get(r.year).set(r.state,r);});
+  const rate=(s,y)=>byYear.get(y).get(s).rate;
+  const natAvg=y=>{let c=0,p=0;for(const r of byYear.get(y).values()){c+=r.cases;p+=r.pop;}return c/p*1e5;};
+  const rateExt=d3.extent(rows,r=>r.rate);
+  const colOf=v=>d3.interpolateYlOrRd(0.12+0.82*(v-rateExt[0])/(rateExt[1]-rateExt[0]));
+
+  let year=2011, selected=null, cmp="natl";   // comparison: "natl" or a state code
+
+  // ---- map ----
+  const MW=560,MH=520;
+  const proj=d3.geoIdentity().reflectY(true).fitSize([MW,MH],geo);
+  const path=d3.geoPath(proj);
+  const svg=d3.select("#map").append("svg").attr("viewBox",`0 0 ${MW} ${MH}`);
+  svg.append("rect").attr("width",MW).attr("height",MH).attr("fill","transparent").on("click",deselect);
+  svg.selectAll("path.state").data(geo.features,d=>d.properties.code).join("path")
+    .attr("class","state").attr("d",path).attr("data-code",d=>d.properties.code)
+    .on("click",(e,d)=>{e.stopPropagation();select(d.properties.code);});
+
+  function paintMap(){
+    svg.selectAll("path.state").transition().duration(500).attr("fill",d=>colOf(rate(d.properties.code,year)));
+    svg.selectAll("path.state").classed("dim",d=>selected&&d.properties.code!==selected&&!(cmp!=="natl"&&d.properties.code===cmp))
+      .classed("sel",d=>d.properties.code===selected);
+  }
+
+  // ---- legend ----
+  (function legend(){
+    const W=420,H=46,m={l:14,r:14,t:22,b:14},iw=W-m.l-m.r;
+    const s=d3.select("#legend").append("svg").attr("viewBox",`0 0 ${W} ${H}`);
+    const g=s.append("defs").append("linearGradient").attr("id","lg").attr("x1","0%").attr("x2","100%");
+    for(let i=0;i<=30;i++){const t=i/30;g.append("stop").attr("offset",`${t*100}%`).attr("stop-color",colOf(rateExt[0]+t*(rateExt[1]-rateExt[0])));}
+    const gg=s.append("g").attr("transform",`translate(${m.l},${m.t})`);
+    gg.append("text").attr("class","legtitle").attr("y",-7).text("Hospitalisations per 100,000");
+    gg.append("rect").attr("width",iw).attr("height",9).attr("rx",2).attr("fill","url(#lg)");
+    const x=d3.scaleLinear().domain(rateExt).range([0,iw]);
+    gg.append("g").attr("class","legend-axis").attr("transform","translate(0,9)").call(d3.axisBottom(x).ticks(6).tickSize(3).tickFormat(d3.format(",.0f")));
+  })();
+
+  // ---- silhouette path for a state (or whole Australia for "natl") ----
+  function silhouettePath(key,w,h){
+    if(key==="natl"){const p=d3.geoIdentity().reflectY(true).fitSize([w,h],geo);return d3.geoPath(p)(geo);}
+    const f=geo.features.find(x=>x.properties.code===key);
+    const p=d3.geoIdentity().reflectY(true).fitSize([w,h],f);return d3.geoPath(p)(f);
+  }
+
+  // ---- column: state shape at the bottom, hospital icons stacked above it ----
+  function columnSVG(key,r,color){
+    const iconW=24,iconH=15,gap=2,shapeW=66,shapeH=44,pad=4;
+    const units=r/UNIT,full=Math.floor(units),frac=units-full,nI=full+(frac>0.02?1:0);
+    const stackH=Math.max(1,nI)*(iconH+gap);
+    const W=Math.max(shapeW,iconW+10),H=stackH+shapeH+pad;
+    const ix=(W-iconW)/2, baseline=H-shapeH-2;            // icons sit just above the shape
+    const cross=(x,y)=>`<rect x="${x+iconW/2-1.5}" y="${y+iconH/2-4}" width="3" height="8" fill="#fff"/><rect x="${x+iconW/2-4}" y="${y+iconH/2-1.5}" width="8" height="3" fill="#fff"/>`;
+    let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+    // state shape anchored at the bottom
+    s+=`<g transform="translate(${(W-shapeW)/2},${H-shapeH})"><path d="${silhouettePath(key,shapeW,shapeH)}" fill="${color}" opacity="0.3" stroke="${color}" stroke-width="0.8"/></g>`;
+    // hospital icons rising above the shape
+    for(let k=0;k<full;k++){const y=baseline-iconH-k*(iconH+gap);
+      s+=`<rect x="${ix}" y="${y}" width="${iconW}" height="${iconH}" rx="2.5" fill="${color}" stroke="#fff"/>${cross(ix,y)}`;}
+    if(frac>0.02){const k=full,y=baseline-iconH-k*(iconH+gap),show=frac*iconH,id="cp"+key+Math.round(r*100);
+      s+=`<clipPath id="${id}"><rect x="${ix}" y="${y+iconH-show}" width="${iconW}" height="${show}"/></clipPath>`;
+      s+=`<g clip-path="url(#${id})"><rect x="${ix}" y="${y}" width="${iconW}" height="${iconH}" rx="2.5" fill="${color}" stroke="#fff"/>${cross(ix,y)}</g>`;}
+    return s+`</svg>`;
+  }
+
+  // ---- detail ----
+  function renderDetail(){
+    const el=document.getElementById("detail");
+    if(!selected){el.hidden=true;document.getElementById("row").classList.remove("has-detail");return;}
+    el.hidden=false;document.getElementById("row").classList.add("has-detail");
+    const r=rate(selected,year);
+    const cmpRate = cmp==="natl"?natAvg(year):rate(cmp,year);
+    const cmpName = cmp==="natl"?"National avg":cmp;
+    const mult=(r/cmpRate).toFixed(2);
+    const chips=["natl",...CODES.filter(c=>c!==selected)]
+      .map(c=>`<button class="chip ${c===cmp?"on":""}" data-c="${c}">${c==="natl"?"National avg":c}</button>`).join("");
+    el.innerHTML=`
+      <button class="dclose" id="dclose" aria-label="Close">×</button>
+      <p class="deyebrow">Focused · ${year}</p>
+      <h2 class="dtitle">${FULL[selected]}</h2>
+      <p class="dhead">${mult}× ${cmpName.toLowerCase()}</p>
+      <div class="stacks">
+        <div class="stackcol">${columnSVG(selected,r,colOf(r))}<div class="stacklab" style="color:${colOf(r)}">${selected}</div><div class="stackval">${r.toFixed(0)} /100k</div></div>
+        <div class="stackcol">${columnSVG(cmp,cmpRate,"#9aa7b6")}<div class="stacklab" style="color:#6b7280">${cmpName}</div><div class="stackval">${cmpRate.toFixed(0)} /100k</div></div>
+      </div>
+      <p class="cmplabel">Compare with</p>
+      <div class="chips">${chips}</div>`;
+    el.querySelector("#dclose").onclick=deselect;
+    el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{cmp=b.dataset.c;paintMap();renderDetail();});
+  }
+
+  function select(code){ selected=code; if(cmp===code)cmp="natl"; paintMap(); renderDetail(); }
+  function deselect(){ selected=null; cmp="natl"; paintMap(); renderDetail(); }
+
+  // ---- key + controls ----
+  document.getElementById("key").innerHTML=
+    `<svg width="17" height="13"><rect width="17" height="13" rx="2" fill="${colOf(rateExt[1])}"/>
+     <rect x="7" y="3" width="3" height="7" fill="#fff"/><rect x="4.5" y="5" width="8" height="3" fill="#fff"/></svg> = ${UNIT} / 100,000`;
+  let timer=null;const play=document.getElementById("play"),sl=document.getElementById("yr");
+  function setYear(y){year=y;document.getElementById("yrnum").textContent=y;sl.value=y;paintMap();if(selected)renderDetail();}
+  sl.addEventListener("input",e=>{stop();setYear(+e.target.value);});
+  play.addEventListener("click",()=>timer?stop():start());
+  function start(){play.textContent="❚❚ PAUSE";if(year>=2021)setYear(2011);timer=d3.interval(()=>setYear(year>=2021?2011:year+1),1100);}
+  function stop(){play.textContent="▶ PLAY";if(timer){timer.stop();timer=null;}}
+  setYear(2011);
+});
+</script>
+</body>
+</html>

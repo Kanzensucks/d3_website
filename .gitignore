@@ -1,0 +1,13 @@
+# Build scripts and generated files
+make_pptx.js
+presentation.pptx
+
+# Node
+node_modules/
+
+# Local IDE / Claude config
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db

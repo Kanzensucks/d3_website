@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas of Road Trauma — isometric prisms</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root{ --bg:#0a0f17; --panel:#111824; --rule:#243140; --ink:#dfe8f2;
+           --mut:#7d91a8; --cyan:#39d0ff; }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at 50% 0%,#16243c,#0a0f17 60%);
+      color:var(--ink);font-family:"Inter","Segoe UI",sans-serif;padding:22px}
+    h1{font-size:1.35rem;margin:0 0 2px;letter-spacing:.03em}
+    .sub{color:var(--mut);font-size:.86rem;margin:0 0 16px}
+    .bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--panel);
+      border:1px solid var(--rule);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+    .play{background:var(--cyan);color:#04121b;border:0;border-radius:8px;padding:8px 15px;font-weight:800;cursor:pointer}
+    #yr{flex:1;min-width:160px;accent-color:var(--cyan)}
+    .yrnum{font-size:1.5rem;font-weight:800;color:var(--cyan);font-variant-numeric:tabular-nums}
+    .seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden}
+    .seg button{background:transparent;color:var(--mut);border:0;padding:7px 14px;font-weight:700;font-size:.82rem;cursor:pointer}
+    .seg button.on{background:var(--cyan);color:#04121b}
+    .stage{position:relative;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:8px}
+    svg{display:block;width:100%;height:auto;cursor:grab}
+    svg:active{cursor:grabbing}
+    .gpoly{fill:#1a2740;stroke:#2c3e58;stroke-width:.6}
+    .seglabel{font-size:11px;font-weight:800;fill:#fff;paint-order:stroke;stroke:#0a0f17;stroke-width:3}
+    .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.8rem;color:var(--ink)}
+    .legend .it{display:inline-flex;align-items:center;gap:6px}
+    .legend .sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+    .hint{color:var(--mut);font-size:.78rem;margin-top:6px}
+    .tip{position:fixed;pointer-events:none;background:#04121b;border:1px solid var(--cyan);
+      border-radius:7px;padding:7px 10px;font-size:.8rem;color:#eaf6ff;z-index:9;display:none;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+    .tip b{color:var(--cyan)}
+  </style>
+</head>
+<body>
+  <h1>◢ Atlas of Road Trauma — isometric prisms</h1>
+  <p class="sub">Column height = rate / 100k · stacked by category · drag to rotate · scrub/play the decade</p>
+
+  <div class="bar">
+    <button class="play" id="play">▶ PLAY</button>
+    <input type="range" id="yr" min="2011" max="2021" step="1" value="2011" />
+    <span class="yrnum" id="yrnum">2011</span>
+    <span class="seg" id="dim">
+      <button data-d="roaduser" class="on">Road user</button>
+      <button data-d="age">Age</button>
+      <button data-d="sex">Sex</button>
+    </span>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 900 560"></svg>
+    <div class="legend" id="legend"></div>
+    <p class="hint">Drag the scene left/right to rotate. Hover a segment for detail.</p>
+  </div>
+  <div class="tip" id="tip"></div>
+
+<script>
+const CODES=["NSW","Vic","Qld","SA","WA","Tas","NT","ACT"];
+const FULL={NSW:"New South Wales",Vic:"Victoria",Qld:"Queensland",SA:"South Australia",
+  WA:"Western Australia",Tas:"Tasmania",NT:"Northern Territory",ACT:"Australian Capital Territory"};
+
+Promise.all([
+  d3.csv("../data/state_year_per100k.csv",d=>({year:+d.Year,state:d.state,cases:+d.cases,pop:+d.population,rate:+d.cases_per_100k})),
+  d3.csv("../data/state_year_roaduser.csv",d=>({year:+d.year,cat:d.road_user,state:d.state,cases:+d.cases})),
+  d3.csv("../data/state_year_age.csv",d=>({year:+d.year,cat:d.age_group,state:d.state,cases:+d.cases})),
+  d3.csv("../data/state_year_sex.csv",d=>({year:+d.year,cat:d.sex,state:d.state,cases:+d.cases})),
+  d3.json("../data/aus_states.geojson")
+]).then(([tot,ru,age,sex,geo])=>{
+  // totals lookup
+  const T=new Map(); tot.forEach(r=>T.set(r.state+"|"+r.year,r));
+  const pop=(s,y)=>T.get(s+"|"+y).pop, totRate=(s,y)=>T.get(s+"|"+y).rate, totCases=(s,y)=>T.get(s+"|"+y).cases;
+
+  // Build a dimension: state|year -> [{cat,rate}], plus ordered category list + colour.
+  function buildDim(rows,order,addRemainder,remName){
+    const cats=order?order.slice():[...new Set(rows.map(r=>r.cat))];
+    const m=new Map(); // key -> Map(cat->cases)
+    rows.forEach(r=>{const k=r.state+"|"+r.year; if(!m.has(k))m.set(k,new Map()); m.get(k).set(r.cat,(m.get(k).get(r.cat)||0)+r.cases);});
+    if(addRemainder){
+      for(const s of CODES)for(let y=2011;y<=2021;y++){const k=s+"|"+y;const mm=m.get(k)||new Map();
+        let known=0; mm.forEach(v=>known+=v); const rem=Math.max(0,totCases(s,y)-known);
+        mm.set(remName,rem); m.set(k,mm);}
+      if(!cats.includes(remName)) cats.unshift(remName);
+    }
+    return {cats, get:(s,y)=>{const mm=m.get(s+"|"+y)||new Map();
+      return cats.map(c=>({cat:c, rate:(mm.get(c)||0)/pop(s,y)*1e5}));}};
+  }
+  const dims={
+    roaduser:buildDim(ru,["Motorcyclist","Pedal cyclist","Pedestrian","Bus occupant","Other or unknown"],true,"Vehicle occupant"),
+    age:buildDim(age,[...new Set(age.map(r=>r.cat))].sort((a,b)=>parseInt(a)-parseInt(b)),false),
+    sex:buildDim(sex,["Male","Female"],false),
+  };
+  const palettes={
+    roaduser:d3.scaleOrdinal(dims.roaduser.cats,["#e15759","#4e79a7","#59a14f","#edc948","#b07aa1","#9c755f"]),
+    age:d3.scaleOrdinal(dims.age.cats,d3.schemeSpectral[Math.max(3,dims.age.cats.length)]),
+    sex:d3.scaleOrdinal(["Male","Female"],["#4e79a7","#e15759"]),
+  };
+
+  // geometry / isometric ground
+  const W=900,H=560, Wm=720,Hm=420;
+  const proj=d3.geoIdentity().reflectY(true).fitSize([Wm,Hm],geo);
+  const path=d3.geoPath(proj);
+  const cents={}; geo.features.forEach(f=>cents[f.properties.code]=path.centroid(f));
+  const cx=Wm/2, cy=Hm/2, ox=W/2, oy=H*0.62, tilt=0.5;
+  let theta=-0.35;
+  function ground(px,py){let x=px-cx,y=py-cy;const c=Math.cos(theta),s=Math.sin(theta);
+    return [ox+(x*c-y*s), oy+(x*s+y*c)*tilt];}
+
+  const maxRate=d3.max(tot,r=>r.rate)*1.05;
+  const hS=d3.scaleLinear().domain([0,maxRate]).range([0,250]);
+  const BW=30;
+
+  const svg=d3.select("#svg");
+  const gGround=svg.append("g");
+  const gBars=svg.append("g");
+  const tip=document.getElementById("tip");
+
+  function setGroundTransform(){
+    gGround.attr("transform",`translate(${ox},${oy}) scale(1,${tilt}) rotate(${theta*180/Math.PI}) translate(${-cx},${-cy})`);
+  }
+  gGround.selectAll("path").data(geo.features).join("path").attr("class","gpoly").attr("d",path);
+
+  let dim="roaduser", year=2011;
+
+  function render(){
+    setGroundTransform();
+    const pal=palettes[dim];
+    // order states back-to-front by projected depth
+    const order=CODES.map(c=>({c,base:ground(cents[c][0],cents[c][1])})).sort((a,b)=>a.base[1]-b.base[1]);
+    const g=gBars.selectAll("g.col").data(order,d=>d.c).join(enter=>{
+      const gg=enter.append("g").attr("class","col"); gg.append("text").attr("class","seglabel").attr("text-anchor","middle"); return gg;});
+    gBars.selectAll("g.col").sort((a,b)=>a.base[1]-b.base[1]);
+    g.attr("transform",d=>`translate(${d.base[0]},${d.base[1]})`);
+    g.each(function(d){
+      const segs=dims[dim].get(d.c,year);
+      let cum=0; const total=d3.sum(segs,s=>s.rate);
+      const sel=d3.select(this);
+      const rects=sel.selectAll("g.seg").data(segs,s=>s.cat).join(en=>{
+        const e=en.append("g").attr("class","seg");
+        e.append("path").attr("class","face-top");
+        e.append("path").attr("class","face-side");
+        e.append("rect").attr("class","face-front");
+        return e;});
+      rects.each(function(s){
+        const y0=-hS(cum), y1=-hS(cum+s.rate), h=y0-y1;
+        const col=pal(s.cat), dk=d3.color(col).darker(0.6), lt=d3.color(col).brighter(0.3);
+        const seg=d3.select(this);
+        seg.select("rect.face-front").transition().duration(500)
+          .attr("x",-BW/2).attr("y",y1).attr("width",BW).attr("height",Math.max(0,h)).attr("fill",col);
+        // simple 3D side + top (depth dd)
+        const dd=8;
+        seg.select("path.face-side").transition().duration(500)
+          .attr("d",`M${BW/2},${y1} l${dd},${-dd} l0,${h} l${-dd},${dd} Z`).attr("fill",dk);
+        seg.select("path.face-top").transition().duration(500)
+          .attr("d",`M${-BW/2},${y1} l${dd},${-dd} l${BW},0 l${-dd},${dd} Z`).attr("fill",lt);
+        seg.on("mousemove",ev=>{ tip.style.display="block"; tip.style.left=(ev.clientX+14)+"px"; tip.style.top=(ev.clientY+14)+"px";
+            tip.innerHTML=`<b>${FULL[d.c]}</b> · ${year}<br>${s.cat}: ${s.rate.toFixed(1)} /100k`; })
+          .on("mouseout",()=>tip.style.display="none");
+        cum+=s.rate;
+      });
+      sel.select("text.seglabel").transition().duration(500).attr("y",-hS(total)-8).text(`${d.c} ${total.toFixed(0)}`);
+    });
+  }
+
+  function buildLegend(){
+    const pal=palettes[dim], L=d3.select("#legend"); L.selectAll("*").remove();
+    dims[dim].cats.forEach(c=>{const it=L.append("span").attr("class","it");
+      it.append("span").attr("class","sw").style("background",pal(c)); it.append("span").text(c);});
+  }
+
+  // drag to rotate
+  svg.call(d3.drag().on("drag",ev=>{ theta+=ev.dx*0.01; render(); }));
+
+  // controls
+  const slider=document.getElementById("yr"),num=document.getElementById("yrnum"),play=document.getElementById("play");
+  let timer=null;
+  function setYear(y){year=y;slider.value=y;num.textContent=y;render();}
+  slider.addEventListener("input",e=>{stop();setYear(+e.target.value);});
+  play.addEventListener("click",()=>timer?stop():start());
+  function start(){play.textContent="❚❚ PAUSE";if(year>=2021)setYear(2011);timer=d3.interval(()=>setYear(year>=2021?2011:year+1),1200);}
+  function stop(){play.textContent="▶ PLAY";if(timer){timer.stop();timer=null;}}
+  document.querySelectorAll("#dim button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#dim button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    dim=b.dataset.d; buildLegend(); render();}));
+
+  buildLegend(); setYear(2011);
+});
+</script>
+</body>
+</html>
