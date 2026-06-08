@@ -1119,7 +1119,7 @@ function drawLegendVertical(stage) {
       .attr("y1", yz).attr("y2", yz);
     svg.append("text").attr("x", barX - 4).attr("y", yz)
       .attr("text-anchor", "end").attr("dy", "0.32em")
-      .attr("font-size", 9).attr("fill", "#111827").text("avg");
+      .attr("font-size", 9).attr("class", "dc-nt-label").text("avg");
   }
 }
 
