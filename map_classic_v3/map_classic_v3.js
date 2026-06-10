@@ -211,7 +211,7 @@ function buildProjection(geo, w, h) {
 
 function fillFor(code) {
   const rate = sliceRate(code, vizState.currentYear);
-  if (rate == null) return "#eee";
+  if (rate == null) return getComputedStyle(document.documentElement).getPropertyValue('--rule').trim() || '#eee';
   if (vizState.mode === "delta") {
     const natl = vizState.sliceNationalByYear.get(vizState.currentYear);
     return vizState.colorDelta(rate - natl);
@@ -616,7 +616,8 @@ function refreshCompareStripValues() {
     const sel  = d3.select(this);
 
     if (rate == null || !natl) {
-      sel.select(".cmp-bar").style("width", "0%").style("background", "#ccc");
+      sel.select(".cmp-bar").style("width", "0%").style("background",
+        getComputedStyle(document.documentElement).getPropertyValue('--rule').trim() || '#ccc');
       sel.select(".cmp-rate").html(`— <span>/100k</span>`);
       sel.select(".cmp-mult").text("");
       return;

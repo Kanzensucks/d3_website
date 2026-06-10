@@ -183,6 +183,7 @@ function updateStats(state) {
     document.getElementById('st-rate-sub').textContent = '—';
     document.getElementById('st-top').textContent = '—';
     document.getElementById('st-top-sub').textContent = '—';
+    updateBarWidths();
     return;
   }
 

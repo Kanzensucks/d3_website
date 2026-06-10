@@ -25,6 +25,7 @@
   --accent-soft: rgba(232,82,58,.18);
   --accent-glow: rgba(232,82,58,.18);
   --pin:         #4d9de0;
+  --positive:    #3ec99a;
   --danger-bg:   #1a0a08;
   --danger-ink:  #ff8070;
   --danger-rule: #3a1510;
@@ -49,6 +50,7 @@
   --accent-soft: rgba(200,57,30,.12);
   --accent-glow: rgba(200,57,30,.12);
   --pin:         #1a6fb5;
+  --positive:    #0e7f5f;
   --danger-bg:   #fff0ee;
   --danger-ink:  #8a2010;
   --danger-rule: #f5c2c0;
@@ -635,7 +637,7 @@ body {
 
 .cmp-mult { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; margin: 0; }
 .cmp-mult.is-up   { color: var(--accent); }
-.cmp-mult.is-down { color: #3ec99a; }
+.cmp-mult.is-down { color: var(--positive); }
 
 /* ── Compare bar (inside map box) ─────────────────── */
 .map-compare-bar {
@@ -798,7 +800,7 @@ body {
 
 .stat .stat-v.is-accent { color: var(--accent); }
 .stat .stat-v.is-up     { color: var(--accent); }
-.stat .stat-v.is-down   { color: #3ec99a; }
+.stat .stat-v.is-down   { color: var(--positive); }
 
 .stat-compare-chip {
   font-family: 'IBM Plex Mono', monospace;

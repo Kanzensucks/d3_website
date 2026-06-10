@@ -20,7 +20,7 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
   <link rel="stylesheet" href="../assets/nav.css" />
-  <link rel="stylesheet" href="map_classic_v3.css?v=4" />
+  <link rel="stylesheet" href="map_classic_v3.css?v=5" />
   <style>
     /* With the 44px site nav above, .page can't be 100% of the viewport
        any more — let flexbox give it the remaining height instead.
@@ -144,7 +144,8 @@
                aria-label="Choropleth map of Australia. Click a state to focus it.">
 
         <button id="nt-pill" class="nt-pill" type="button" hidden
-                aria-label="Return focus to the Northern Territory">NT story ↑</button>
+                title="Refocus the map on the Northern Territory"
+                aria-label="See the Northern Territory outlier — refocus map">See the NT outlier →</button>
 
         <div class="map-main">
           <div class="map-area">
@@ -194,7 +195,7 @@
     </footer>
   </main>
 
-  <script src="map_classic_v3.js?v=3"></script>
+  <script src="map_classic_v3.js?v=4"></script>
   <script>
     // Show the right glyph when arriving with a saved light theme
     document.getElementById('theme-toggle-btn').textContent =
