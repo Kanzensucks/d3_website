@@ -145,8 +145,8 @@ gallery of experiments):
    so it complements rather than carries the thesis.
 4. **`index.html` hub** presents the two flagships prominently with the thesis and
    key stats, links the bonus separately, and carries the method note. The
-   `sample_*.html` prototypes are retained in the repo as **process evidence**
-   (referenced in this document) but are not surfaced as deliverables.
+   `sample_*.html` prototypes were removed from the final submission repo to
+   keep the deliverable lean; process evidence is documented in this file instead.
 5. **Pure D3 v7, no frameworks/build step** throughout (per the brief). A true-3D
    three.js version was considered for the network but rejected to stay in-brief.
 6. **Projection:** `d3.geoIdentity().reflectY(true)` (planar) rather than spherical
