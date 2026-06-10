@@ -278,7 +278,7 @@ function render(state) {
 
   // Column headers
   const isDark = document.documentElement.dataset.theme === 'dark';
-  const mutedColor = isDark ? '#4a5368' : '#9998a8';
+  const mutedColor = isDark ? '#6b7590' : '#6e6c84';
   const textColor  = isDark ? '#e4e8f2' : '#1a1a22';
   const text2Color = isDark ? '#8a93aa' : '#5a5870';
 

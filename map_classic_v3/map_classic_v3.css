@@ -17,7 +17,7 @@
   --panel2:      #161c28;
   --ink:         #e4e8f2;
   --ink-soft:    #8a93aa;
-  --ink-mute:    #4a5368;
+  --ink-mute:    #6b7590;
   --rule:        #1e2636;
   --rule2:       #2a3347;
   --accent:      #e8523a;
@@ -41,7 +41,7 @@
   --panel2:      #efe9e0;
   --ink:         #1a1a22;
   --ink-soft:    #5a5870;
-  --ink-mute:    #9998a8;
+  --ink-mute:    #6e6c84;
   --rule:        #ddd4c4;
   --rule2:       #c9bfb0;
   --accent:      #c8391e;
@@ -85,8 +85,11 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: none;
-  margin: 0;
+  max-width: 1560px;
+  width: 100%;
+  margin-inline: auto;
+  margin-top: 0;
+  margin-bottom: 0;
   padding: 0;
   overflow: hidden;
 }
@@ -699,13 +702,28 @@ body {
   scrollbar-color: var(--rule2) transparent;
 }
 
-.detail-card::-webkit-scrollbar { width: 4px; }
+.detail-card::-webkit-scrollbar { width: 8px; }
 .detail-card::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 4px; }
 
 @keyframes cardIn {
   from { opacity: 0; transform: translateX(10px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* Scroll-overflow fade indicator */
+.scroll-fade {
+  position: sticky;
+  bottom: 0;
+  height: 32px;
+  margin-left: -16px;
+  margin-right: -16px;
+  margin-top: -32px;
+  background: linear-gradient(to bottom, transparent, var(--panel));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.detail-card.has-overflow .scroll-fade { opacity: 1; }
 
 .detail-close {
   position: absolute; top: 12px; right: 12px;
@@ -743,22 +761,22 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.66rem;
   color: var(--ink-mute);
-  margin: 0 0 12px;
+  margin: 0 0 6px;
 }
 
 /* ── Stats grid ───────────────────────────────────── */
 .detail-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 7px 10px;
-  margin-bottom: 14px;
+  gap: 6px 8px;
+  margin-bottom: 8px;
 }
 
 .stat {
   background: var(--panel2);
   border: 1px solid var(--rule);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 6px 10px;
 }
 
 .stat .stat-k {
@@ -835,7 +853,7 @@ body {
   font-size: 0.64rem;
   font-weight: 500;
   color: var(--ink-soft);
-  margin: 12px 0 4px;
+  margin: 6px 0 2px;
   letter-spacing: 0.02em;
 }
 
@@ -897,8 +915,9 @@ body {
 .popover-menu {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  min-width: 170px;
+  right: 0;
+  left: auto;
+  min-width: max-content;
   background: var(--panel);
   border: 1px solid var(--rule2);
   border-radius: 10px;
@@ -929,6 +948,7 @@ body {
 }
 .popover-item:hover { background: var(--panel2); color: var(--ink); }
 .popover-item.is-active { background: var(--accent); color: #fff; }
+.popover-item { white-space: nowrap; }
 .popover-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* ── Map hover tooltip ────────────────────────────── */

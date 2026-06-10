@@ -637,8 +637,17 @@ function refreshCompareStripValues() {
 // ============================================================
 // 7. Detail card
 // ============================================================
+function updateDetailScrollFade() {
+  const dc = document.getElementById("detail-card");
+  if (!dc || dc.hidden) return;
+  const overflow = dc.scrollHeight > dc.clientHeight + 4;
+  const atBottom = dc.scrollTop + dc.clientHeight >= dc.scrollHeight - 4;
+  dc.classList.toggle("has-overflow", overflow && !atBottom);
+}
+
 function openDetailCard(code) {
-  document.getElementById("detail-card").hidden = false;
+  const dc = document.getElementById("detail-card");
+  dc.hidden = false;
   document.querySelector(".stage-row").classList.add("has-detail");
   renderDetailCard(code);
 }
@@ -668,11 +677,13 @@ function renderDetailCard(code) {
 
     <p class="breakdown-title" id="bd-title">Who's getting hurt</p>
     <div class="bd-chart" id="bd-chart"></div>
+    <div class="scroll-fade" aria-hidden="true"></div>
   `;
 
   renderDetailChart(code);
   updateDetailForYear(code, vizState.currentYear);
   renderBreakdown(code, vizState.currentYear);
+  updateDetailScrollFade();
 }
 
 function updateDetailForYear(code, year) {
@@ -752,7 +763,7 @@ function renderDetailChart(code) {
   const mount = d3.select("#detail-chart");
   mount.selectAll("*").remove();
 
-  const W = 380, H = 220;
+  const W = 380, H = 160;
   const margin = { top: 10, right: 38, bottom: 26, left: 36 };
   const innerW = W - margin.left - margin.right;
   const innerH = H - margin.top - margin.bottom;
@@ -852,34 +863,36 @@ function renderDetailChart(code) {
   const dotAvg   = g.append("circle").attr("class", "dc-dot-avg").attr("r", 3.5);
   const dotState = g.append("circle").attr("class", "dc-dot-state").attr("r", 4);
 
-  // End-of-line labels at right edge — more readable than a top legend
-  const labelX = innerW + 4;
+  // End-of-line labels with de-collision (min 13px gap)
+  const endLbls = [];
   const lastState = stateSeries[stateSeries.length - 1];
-  if (lastState?.value != null) {
-    g.append("text").attr("class", "dc-leg-state")
-      .attr("x", labelX).attr("y", y(lastState.value)).attr("dy", "0.32em")
-      .attr("font-size", "9.5px").text(code);
-  }
+  if (lastState?.value != null) endLbls.push({ origY: y(lastState.value), cls: "dc-leg-state", txt: code });
   const lastNatl = natlPts[natlPts.length - 1];
-  if (lastNatl?.value != null) {
-    g.append("text").attr("class", "dc-leg-avg")
-      .attr("x", labelX).attr("y", y(lastNatl.value)).attr("dy", "0.32em")
-      .attr("font-size", "9.5px").text("Avg");
-  }
+  if (lastNatl?.value != null) endLbls.push({ origY: y(lastNatl.value), cls: "dc-leg-avg", txt: "Avg" });
   for (const [cc, series] of Object.entries(compareSeries)) {
-    const lastCmp = series[series.length - 1];
-    if (lastCmp?.value != null) {
-      g.append("text").attr("class", "dc-leg-compare")
-        .attr("x", labelX).attr("y", y(lastCmp.value)).attr("dy", "0.32em")
-        .attr("font-size", "9.5px").text(cc);
-    }
+    const lc = series[series.length - 1];
+    if (lc?.value != null) endLbls.push({ origY: y(lc.value), cls: "dc-leg-compare", txt: cc });
   }
-  if (ntSeries) {
-    const lastNT = ntSeries[ntSeries.length - 1];
-    if (lastNT?.value != null) {
-      // NT label already handled by the existing dc-nt-label below
-    }
+  endLbls.sort((a, b) => a.origY - b.origY);
+  endLbls.forEach((d) => { d.nudgedY = d.origY; });
+  const minGap = 13;
+  for (let i = 1; i < endLbls.length; i++) {
+    if (endLbls[i].nudgedY < endLbls[i - 1].nudgedY + minGap)
+      endLbls[i].nudgedY = endLbls[i - 1].nudgedY + minGap;
   }
+  const labelX = innerW + 4;
+  endLbls.forEach(d => {
+    if (Math.abs(d.nudgedY - d.origY) > 2) {
+      g.append("line").attr("class", d.cls)
+        .attr("x1", innerW + 1).attr("y1", d.origY)
+        .attr("x2", innerW + 1).attr("y2", d.nudgedY)
+        .attr("stroke-width", "1").attr("stroke-dasharray", "1 2")
+        .attr("fill", "none").attr("opacity", "0.55");
+    }
+    g.append("text").attr("class", d.cls)
+      .attr("x", labelX).attr("y", d.nudgedY)
+      .attr("dy", "0.32em").attr("font-size", "9.5px").text(d.txt);
+  });
 
   vizState.detailChart = { x, y, innerH, cursor, dotState, dotAvg, code };
 
@@ -934,10 +947,10 @@ function renderBreakdown(code, year, compareCode) {
 
   // T23: fixed column layout — value ALWAYS outside bar area
   const W       = 390;
-  const labelW  = 92;
+  const labelW  = 104;
   const pctW    = 38;   // always-visible percentage column
   const countW  = 72;   // hover-only count column
-  const rowH    = 27;
+  const rowH    = 22;
   const padTop  = 2, padBottom = 2;
   const barX    = labelW + 4;
   const barMaxW = W - barX - pctW - countW - 6;
@@ -1259,6 +1272,14 @@ function popoverSelect(btnId, popoverId, labelId, items, currentValue, onPick) {
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
+    // Close sibling popovers before toggling this one
+    document.querySelectorAll(".popover-menu").forEach(p => {
+      if (p !== popover && !p.hidden) {
+        p.hidden = true;
+        const tb = p.closest(".popover-wrap")?.querySelector(".popover-trigger");
+        if (tb) { tb.classList.remove("is-open"); tb.setAttribute("aria-expanded", "false"); }
+      }
+    });
     const open = !popover.hidden;
     popover.hidden = open;
     btn.classList.toggle("is-open", !open);
@@ -1269,6 +1290,14 @@ function popoverSelect(btnId, popoverId, labelId, items, currentValue, onPick) {
     popover.hidden = true;
     btn.classList.remove("is-open");
     btn.setAttribute("aria-expanded", "false");
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !popover.hidden) {
+      popover.hidden = true;
+      btn.classList.remove("is-open");
+      btn.setAttribute("aria-expanded", "false");
+    }
   });
 
   return { rebuild };
@@ -1429,6 +1458,14 @@ function wireFilterBar() {
   if (dvBtn && dvPop) {
     dvBtn.addEventListener("click", (e) => {
       e.stopPropagation();
+      // Close sibling popovers
+      document.querySelectorAll(".popover-menu").forEach(p => {
+        if (p !== dvPop && !p.hidden) {
+          p.hidden = true;
+          const tb = p.closest(".popover-wrap")?.querySelector(".popover-trigger");
+          if (tb) { tb.classList.remove("is-open"); tb.setAttribute("aria-expanded", "false"); }
+        }
+      });
       const open = !dvPop.hidden;
       dvPop.hidden = open;
       dvBtn.classList.toggle("is-open", !open);
@@ -1531,6 +1568,8 @@ loadData()
     wireNTPill();       // T13
     wireKeyboard();
     handleResize();
+    document.getElementById("detail-card")
+      .addEventListener("scroll", updateDetailScrollFade);
   })
   .catch(err => {
     console.error("Data load failed:", err);

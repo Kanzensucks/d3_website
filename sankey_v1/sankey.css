@@ -14,7 +14,7 @@
   --border2:   #2a3347;
   --text:      #e4e8f2;
   --text2:     #8a93aa;
-  --text3:     #4a5368;
+  --text3:     #6b7590;
   --accent:    #e8523a;
   --accent2:   #ff7f68;
   --glow:      rgba(232,82,58,.18);
@@ -30,7 +30,7 @@
   --border2:   #c9bfb0;
   --text:      #1a1a22;
   --text2:     #5a5870;
-  --text3:     #9998a8;
+  --text3:     #6e6c84;
   --accent:    #c8391e;
   --accent2:   #e05a3a;
   --glow:      rgba(200,57,30,.12);
@@ -41,12 +41,18 @@
 /* ── Reset ──────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
+html {
   height: 100%;
   overflow: hidden;
+  background: var(--bg);
 }
 
 body {
+  height: 100%;
+  overflow: hidden;
+  max-width: 1560px;
+  width: 100%;
+  margin-inline: auto;
   background: var(--bg);
   color: var(--text);
   font-family: 'Syne', sans-serif;
