@@ -1,3 +1,5 @@
+/* GenAI-assisted (Claude) — extraction + edits */
+
 /* ── Tokens ─────────────────────────────────────── */
 :root {
   --ease: cubic-bezier(.22,.68,0,1.2);
@@ -428,6 +430,33 @@ input[type=range] {
 .node-val {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9.5px;
+}
+
+/* ── Footer ─────────────────────────────────────── */
+.sankey-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 5px 24px;
+}
+
+.sankey-footer p {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  line-height: 1.5;
+  color: var(--text3);
+}
+
+.sankey-footer code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+@media (max-height: 740px) {
+  .sankey-footer { padding: 3px 24px; }
 }
 
 /* ── Fade in ─────────────────────────────────────── */

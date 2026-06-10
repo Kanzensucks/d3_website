@@ -1513,9 +1513,6 @@ loadData()
     vizState.roadIdx = indexDemographic(roadRows, "road_user");
     vizState.popIdx  = indexPopulation(popRows);
 
-    console.log("CSV rows:", rows.length, "(expected 88)");
-    console.log("GeoJSON features:", geo.features.length, "(expected 8)");
-
     // Initial slice = "all" → matches map_classic exactly; opens at YEAR_MAX (T5)
     rebuildScalesForFilter();
     buildProjection(geo, MAP_W, MAP_H);

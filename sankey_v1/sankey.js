@@ -1,3 +1,4 @@
+// GenAI-assisted (Claude) — extraction + edits
 const STATES = ['NSW','Vic','Qld','SA','WA','Tas','NT','ACT'];
 const FULL = {
   NSW:'New South Wales', Vic:'Victoria', Qld:'Queensland',

@@ -129,7 +129,7 @@ Shows where each state's hospitalisation burden goes: select a state from the si
 | Hover any node or flow | Shows exact case counts |
 | **☀ / 🌙** button | Toggles light/dark theme |
 
-> Note: this chart is still in development. Additional breakdown dimensions (age group, sex) and further features are planned.
+> Vehicle occupant is a derived category: total hospitalisations minus the five recorded road-user groups (motorcyclist, pedal cyclist, pedestrian, bus occupant, other or unknown).
 
 ---
 
