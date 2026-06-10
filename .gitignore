@@ -1,6 +1,10 @@
 # Build scripts and generated files
 make_pptx.js
+presentation.ppt
 presentation.pptx
+AUDIT_REPORT.md
+DEVELOPMENT_LOG.md
+RESEARCH.md
 
 # Node
 node_modules/
