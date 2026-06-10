@@ -1,0 +1,114 @@
+<!doctype html>
+<!-- GenAI-assisted (Claude) -->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About · Road Trauma in Australia · COS30045 Team 1</title>
+  <meta name="description" content="Project, team, technology, data sources and GenAI declaration for the COS30045 road-trauma visualisation site." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8523a'/%3E%3Ctext x='4' y='22' font-size='16' font-weight='700' fill='white' font-family='sans-serif'%3ENT%3C/text%3E%3C/svg%3E" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/nav.css" />
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+  <nav class="site-nav" aria-label="Site">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">NT</span>
+      <span class="brand-text">Road Trauma · AUS</span>
+    </a>
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="map_classic_v3/index.html">Chart 1 · Map</a>
+    <a class="nav-link" href="sankey_v1/index.html">Chart 2 · Sankey</a>
+    <a class="nav-link" href="about.html" aria-current="page">About</a>
+    <span class="nav-spacer"></span>
+    <button class="nav-theme-btn" type="button" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">☀</button>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <header class="hero">
+        <p class="kicker">COS30045 Data Visualisation</p>
+        <h1>About this project</h1>
+        <p class="standfirst">
+          Who built this site, what it runs on, and where the data comes from.
+        </p>
+      </header>
+
+      <section class="section" aria-label="Project details">
+        <div class="about-grid">
+
+          <div class="about-card">
+            <h3>Project</h3>
+            <p>COS30045 Data Visualisation</p>
+            <p>Swinburne University of Technology</p>
+            <p>Semester 1, 2026</p>
+          </div>
+
+          <div class="about-card">
+            <h3>Technology</h3>
+            <ul>
+              <li>D3.js v7 (CDN) · d3-sankey</li>
+              <li>Vanilla HTML / CSS / JavaScript</li>
+              <li>No framework · No bundler · No build step</li>
+              <li>Data processing: KNIME Analytics Platform</li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3>Team 1</h3>
+            <p>Hamish Hooley <span class="id-placeholder">[STUDENT ID]</span></p>
+            <p>Kanzen Ong <span class="id-placeholder">[STUDENT ID]</span></p>
+            <p class="mono">Tutorial: Thursday 12:30–2:30pm</p>
+          </div>
+
+          <div class="about-card">
+            <h3>GenAI Declaration</h3>
+            <p>
+              Non-trivial code blocks were generated with the assistance of Claude (Anthropic).
+              All AI-assisted blocks are marked <code>// GenAI-assisted (Claude)</code> in source.
+              All code was reviewed and verified by the team.
+            </p>
+          </div>
+
+          <div class="about-card">
+            <h3>Data Sources</h3>
+            <p>
+              Bureau of Infrastructure and Transport Research Economics (BITRE),
+              <em>Hospitalised Injuries from Road Crashes</em>, 2023.<br />
+              <a href="https://www.bitre.gov.au/publications/ongoing/hospitalised-injury">bitre.gov.au/publications/ongoing/hospitalised-injury</a>
+            </p>
+            <p>
+              Australian Bureau of Statistics (ABS),
+              <em>National, State and Territory Population</em>, 2023.<br />
+              <a href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/latest-release">abs.gov.au/statistics/people/population</a>
+            </p>
+          </div>
+
+          <div class="about-card">
+            <h3>Licence</h3>
+            <p>Source data: Creative Commons Attribution 4.0 International (CC BY 4.0).</p>
+            <p>
+              Rates are always per 100,000 of <em>total</em> state population — no stratified
+              denominators are available in the source data.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Source: BITRE · ABS · CC BY 4.0 · COS30045 Team 1 · Hamish Hooley &amp; Kanzen Ong.</p>
+    </div>
+  </footer>
+
+  <script src="assets/theme.js" defer></script>
+</body>
+</html>

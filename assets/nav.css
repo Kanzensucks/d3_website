@@ -1,0 +1,123 @@
+/* =============================================================
+   nav.css — shared site navigation bar, linked by all four pages
+   Scoped entirely under .site-nav with its own --nav-* tokens so
+   it cannot collide with each page's own stylesheet.
+   GenAI-assisted (Claude)
+   ============================================================= */
+
+[data-theme="dark"] {
+  --nav-bg:      rgba(8, 10, 15, .85);
+  --nav-ink:     #e4e8f2;
+  --nav-soft:    #8a93aa;
+  --nav-rule:    #1e2636;
+  --nav-rule2:   #2a3347;
+  --nav-surface: #161c28;
+  --nav-accent:  #e8523a;
+}
+
+[data-theme="light"] {
+  --nav-bg:      rgba(244, 241, 236, .9);
+  --nav-ink:     #1a1a22;
+  --nav-soft:    #5a5870;
+  --nav-rule:    #ddd4c4;
+  --nav-rule2:   #c9bfb0;
+  --nav-surface: #efe9e0;
+  --nav-accent:  #c8391e;
+}
+
+.site-nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 44px;
+  padding: 0 20px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--nav-rule);
+  position: relative;
+  z-index: 30;
+  font-family: 'Syne', sans-serif;
+  white-space: nowrap;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.site-nav .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .66rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--nav-ink);
+  text-decoration: none;
+}
+
+.site-nav .brand-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--nav-accent);
+  color: #fff;
+  font-size: .52rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.site-nav a.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .64rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--nav-soft);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.site-nav a.nav-link:hover { color: var(--nav-ink); }
+
+.site-nav a.nav-link[aria-current="page"] {
+  color: var(--nav-accent);
+  border-bottom-color: var(--nav-accent);
+}
+
+.site-nav .nav-spacer { margin-left: auto; }
+
+.site-nav .nav-theme-btn {
+  align-self: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--nav-rule2);
+  background: var(--nav-surface);
+  color: var(--nav-soft);
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.site-nav .nav-theme-btn:hover {
+  border-color: var(--nav-accent);
+  color: var(--nav-accent);
+}
+
+@media (max-width: 520px) {
+  .site-nav { padding: 0 10px; overflow-x: auto; }
+  .site-nav .brand .brand-text { display: none; }
+  .site-nav .brand { margin-right: 6px; }
+  .site-nav a.nav-link { padding: 0 8px; font-size: .58rem; }
+}

@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- GenAI-assisted (Claude) -->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How Bad Is Road Trauma in Australia? · COS30045 Team 1</title>
+  <meta name="description" content="Hospitalised road-crash injuries in Australia, 2011–2021. A one-minute overview plus two interactive visualisations." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8523a'/%3E%3Ctext x='4' y='22' font-size='16' font-weight='700' fill='white' font-family='sans-serif'%3ENT%3C/text%3E%3C/svg%3E" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="assets/nav.css" />
+  <link rel="stylesheet" href="assets/site.css" />
+</head>
+<body>
+  <nav class="site-nav" aria-label="Site">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">NT</span>
+      <span class="brand-text">Road Trauma · AUS</span>
+    </a>
+    <a class="nav-link" href="index.html" aria-current="page">Home</a>
+    <a class="nav-link" href="map_classic_v3/index.html">Chart 1 · Map</a>
+    <a class="nav-link" href="sankey_v1/index.html">Chart 2 · Sankey</a>
+    <a class="nav-link" href="about.html">About</a>
+    <span class="nav-spacer"></span>
+    <button class="nav-theme-btn" type="button" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">☀</button>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <header class="hero">
+        <p class="kicker">COS30045 Data Visualisation · Team 1 · Hamish Hooley &amp; Kanzen Ong</p>
+        <h1>How Bad Is Road Trauma In Australia? Who Does It Most Affect?</h1>
+        <p class="standfirst">
+          Road deaths make headlines, but for every fatality many more people survive and end up in
+          hospital — <strong>over 400,000 Australians</strong> between 2011 and 2021. This site explores
+          a decade of hospitalised road-crash injuries: how the burden has grown, where it falls
+          hardest, and who is most at risk.
+        </p>
+      </header>
+
+      <section class="section" aria-label="Key statistics">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Hospitalisations in 2021</div>
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-sub">People admitted to hospital after a road crash — the decade's highest count.</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Change vs 2020</div>
+            <div class="stat-value" id="stat-change">—</div>
+            <div class="stat-sub">Injuries rebounded past pre-COVID levels as traffic returned.</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Top recorded road-user group, 2021</div>
+            <div class="stat-value" id="stat-roaduser">—</div>
+            <div class="stat-sub" id="stat-roaduser-sub">Among recorded categories — vehicle occupants are not separately recorded.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="National trend and key takeaway">
+        <div class="trend-grid">
+          <div class="panel-card">
+            <h3>National hospitalisations, 2011–2021</h3>
+            <p class="chart-note">Source: BITRE hospitalised injuries · annual totals</p>
+            <div id="trend-chart" role="img"
+                 aria-label="Line chart of national road-crash hospitalisations rising from about 33,500 in 2011 to 39,035 in 2021, with a dip in 2020."></div>
+          </div>
+          <div class="takeaway-card">
+            <span class="takeaway-label">The central finding</span>
+            <p>
+              <strong>One territory drives on a different road.</strong> Adjusted for population, the
+              Northern Territory's hospitalisation rate sits <strong>above the national average every
+              single year of the decade</strong> — climbing to more than double the average in recent years.
+            </p>
+            <p>
+              Most of Australia sits in a narrow band around the average; the NT never does. See it
+              for yourself on the interactive map.
+            </p>
+            <a class="arrow-link" href="map_classic_v3/index.html">Explore Chart 1 →</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="The two visualisations">
+        <p class="section-label">Two interactive visualisations</p>
+        <div class="chart-card-grid">
+          <a class="chart-card" href="map_classic_v3/index.html">
+            <span class="chart-kicker">Chart 1 · State comparison</span>
+            <h3>A decade of road-crash hospitalisations, state by state</h3>
+            <p>
+              A choropleth map of Australia coloured by hospitalisation rate per 100,000 people.
+              Play the 2011–2021 time-lapse, switch to “vs average”, slice by sex, age band or
+              road-user role, then click any state to focus it and compare states side by side.
+            </p>
+            <span class="open-chart">Open the map →</span>
+          </a>
+          <a class="chart-card" href="sankey_v1/index.html">
+            <span class="chart-kicker">Chart 2 · Where the burden goes</span>
+            <h3>Each state's hospitalisations, traced to who gets hurt</h3>
+            <p>
+              A Sankey flow diagram of the hospitalisation burden, state by state. Pick any state and
+              watch its cases flow into road-user groups — motorcyclists, cyclists, pedestrians —
+              for any year of the decade. Still in development: more breakdowns are on the way.
+            </p>
+            <span class="open-chart">Open the Sankey →</span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Source: BITRE hospitalised road-crash injuries · ABS state populations · CC BY 4.0.
+        COS30045 Data Visualisation · Team 1 · Hamish Hooley &amp; Kanzen Ong.
+        Non-trivial code blocks generated with Claude (GenAI) are marked
+        <code>// GenAI-assisted (Claude)</code> in source.
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/theme.js" defer></script>
+  <script src="assets/home.js" defer></script>
+</body>
+</html>

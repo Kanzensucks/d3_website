@@ -1,6 +1,6 @@
 # Development Log — Animated Choropleth Map
 
-**Project:** COS30045 Data Visualisation · Team 99 · Hamish Hooley & Kanzen Ong
+**Project:** COS30045 Data Visualisation · Team 1 · Hamish Hooley & Kanzen Ong
 **Artefact:** Animated time-lapse choropleth of Australian road-crash
 hospitalisations per 100,000 people, 2011–2021.
 **Tooling:** Plain D3.js v7 (CDN), vanilla HTML/CSS/JS, no build step.

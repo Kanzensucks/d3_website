@@ -1,9 +1,9 @@
 /* =============================================================
    map_classic_v3.js — editorial redesign (T1–T18).
 
-   Thesis: "The NT's road-crash hospitalisation rate runs 1.8–3×
-   the national average across 2011–2021, across every demographic
-   slice."
+   Thesis: "The NT's road-crash hospitalisation rate runs above
+   the national average every year across 2011–2021, up to 2.2×
+   in the worst years."
 
    Changes vs v2:
      T1  Single slicer (no detail-card tabs)
@@ -18,7 +18,7 @@
      T13 "NT story ↑" pill on non-NT focus
    (T4/T7/T8/T14/T15/T16/T17/T18 are CSS/HTML only)
 
-   COS30045 · Team 99 · Hamish Hooley & Kanzen Ong.
+   COS30045 · Team 1 · Hamish Hooley & Kanzen Ong.
    ============================================================= */
 
 // ============================================================

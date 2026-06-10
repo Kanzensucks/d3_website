@@ -1,6 +1,6 @@
 # Research Notes — Australian Road-Trauma Visualisation
 
-**Project:** COS30045 Data Visualisation · Team 99 · Hamish Hooley & Kanzen Ong
+**Project:** COS30045 Data Visualisation · Team 1 · Hamish Hooley & Kanzen Ong
 **Companion docs:** `DEVELOPMENT_LOG.md` (chronological build log) · `index.html` (deliverable hub)
 
 This document records the **research and design thinking** behind the project —

@@ -3,13 +3,13 @@
 **COS30045 Data Visualisation — Team 1**
 Hamish Hooley & Kanzen Ong | Swinburne University of Technology | 2026 Semester 1
 
-An interactive data visualisation of hospitalised road crash injuries across Australian states and territories from 2011 to 2021, built with plain D3.js v7.
+An interactive data visualisation of hospitalised road crash injuries across Australian states and territories from 2011 to 2021, built with plain D3.js v7. The project is a four-page website — Home, Chart 1 (state-comparison map), Chart 2 (Sankey), and About — sharing one navigation bar and a persistent dark/light theme.
 
 ---
 
 ## What this project shows
 
-The Northern Territory records hospitalisation rates 1.8 to 3 times the national average — consistently, across every year and every demographic slice in the dataset. This project makes that finding immediately visible and lets users interrogate it by state, year, sex, age band, and road-user type.
+The Northern Territory records hospitalisation rates above the national average in every year of the dataset — up to 2.2× in the worst years. This project makes that finding immediately visible and lets users interrogate it by state, year, sex, age band, and road-user type.
 
 ---
 
@@ -32,12 +32,34 @@ Then open your browser and navigate to the URL shown in the terminal (usually `h
 
 ---
 
+## Pages
+
+| Page | URL | What it is |
+|---|---|---|
+| Home | `http://localhost:8000/` | One-minute overview: headline finding, key statistics, national trend chart, links to both charts |
+| Chart 1 · Map | `http://localhost:8000/map_classic_v3/` | Interactive state-comparison choropleth (primary deliverable) |
+| Chart 2 · Sankey | `http://localhost:8000/sankey_v1/` | Sankey flow diagram of each state's hospitalisation burden (in progress) |
+| About | `http://localhost:8000/about.html` | Team, technology, data sources, GenAI declaration, licence |
+
+Every page shares the same navigation bar, and the light/dark theme toggle persists across pages via `localStorage`.
+
+---
+
 ## Project structure
 
 ```
 projectttt/
 │
-├── data/                       Shared data files (all charts reference ../data/)
+├── index.html                  Home page — overview, stats, trend chart, links to charts
+├── about.html                  About page — team, tech, data sources, GenAI declaration
+│
+├── assets/                     Shared site assets
+│   ├── nav.css                 Navigation bar styles (linked by all four pages)
+│   ├── site.css                Home/About page styles (same design tokens as the charts)
+│   ├── theme.js                Light/dark toggle with cross-page persistence
+│   └── home.js                 Home-page stat cards + national trend chart
+│
+├── data/                       Shared data files (charts reference ../data/)
 │   ├── aus_states.geojson      GeoJSON boundaries for 8 states/territories
 │   ├── state_year_per100k.csv  Hospitalisation rate per 100,000 by state and year
 │   ├── state_year_age.csv      Cases broken down by age group
@@ -46,17 +68,17 @@ projectttt/
 │   ├── population_clean.csv    ABS estimated resident population by state and year
 │   └── national_trend.csv      National total hospitalisation count by year
 │
-├── map_classic/                Chart 1 — Version 1 (initial build)
-├── map_classic_v2/             Chart 1 — Version 2 (demographic filter added)
-├── map_classic_v3/             Chart 1 — Version 3 (main deliverable, full redesign)
-├── sankey_v1/                  Chart 2 — Version 1 (Sankey diagram, in progress)
-│
-├── archive/                    Experimental prototypes, sample pages, wireframes
+├── map_classic_v3/             Chart 1 — State comparison choropleth (main deliverable)
+├── sankey_v1/                  Chart 2 — Sankey diagram (in progress)
 │
 ├── DEVELOPMENT_LOG.md          Full iteration diary — every design decision logged
 ├── RESEARCH.md                 Research notes, technique evaluations, references
 └── README.md                   This file
 ```
+
+> Earlier iterations (`map_classic/`, `map_classic_v2/`) and the experimental prototypes
+> (`archive/`) were removed in a cleanup; they remain available in the git history, and the
+> iteration story is documented in `DEVELOPMENT_LOG.md` and the Design Book.
 
 ---
 
@@ -92,31 +114,22 @@ This is the primary deliverable. It presents a choropleth map of Australia colou
 
 ---
 
-### Chart 1 — Earlier versions
-
-| Version | URL | What changed |
-|---|---|---|
-| v1 | `http://localhost:8000/map_classic/map_classic.html` | Core choropleth, zoom to state, detail card, compare silhouettes |
-| v2 | `http://localhost:8000/map_classic_v2/map_classic_v2.html` | Added demographic filter (sex / age / road user) and breakdown panel |
-| v3 | `http://localhost:8000/map_classic_v3/` | Full editorial redesign — see DEVELOPMENT_LOG.md for all 25 changes |
-
----
-
 ### Chart 2 — Sankey Diagram (`sankey_v1/`)
 
 **Open:** `http://localhost:8000/sankey_v1/`
 
-Shows where the national hospitalisation burden flows — from the national total, split by state, then broken down further by road user type, age group, or sex. Flow widths represent raw case counts. State node colours are tinted by per-capita rate so the NT reads as red even though its small population makes its band narrow.
+Shows where each state's hospitalisation burden goes: select a state from the sidebar and its cases flow into road-user groups (motorcyclist, pedal cyclist, pedestrian, bus occupant, other). The sidebar also shows the national total, the state's share of it, and its per-100k rate for the selected year.
 
 **How to use it:**
 
 | Action | What it does |
 |---|---|
-| Drag the **year slider** or press **Play** | Updates all flows for the selected year |
-| **By road user / By age group / By sex** buttons | Switches the right-hand breakdown dimension |
-| Hover any node or flow | Shows exact case counts and state per-capita rate |
+| Click a **state** in the sidebar | Renders that state's flow into road-user groups |
+| Drag the **year slider** | Updates the flows for the selected year |
+| Hover any node or flow | Shows exact case counts |
+| **☀ / 🌙** button | Toggles light/dark theme |
 
-> Note: this chart is still in development. A second version with additional features is planned.
+> Note: this chart is still in development. Additional breakdown dimensions (age group, sex) and further features are planned.
 
 ---
 
@@ -138,7 +151,7 @@ ABS population: https://www.abs.gov.au/statistics/people/population/national-sta
 
 ## Technology
 
-- **D3.js v7** (CDN) — all charts and interactions
+- **D3.js v7 + d3-sankey** (CDN) — all charts and interactions
 - **Vanilla HTML / CSS / JavaScript** — no framework, no bundler, no preprocessor
 - **KNIME Analytics Platform** — data cleaning and CSV export pipeline
 - **Python matplotlib** — exploratory data analysis

@@ -8,6 +8,8 @@
   <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
+  <link rel="stylesheet" href="../assets/nav.css"/>
   <style>
     /* ── Tokens ─────────────────────────────────────── */
     :root {
@@ -456,6 +458,18 @@
 </head>
 <body>
 
+<!-- Site navigation (shared across all four pages) -->
+<nav class="site-nav" aria-label="Site">
+  <a class="brand" href="../index.html">
+    <span class="brand-mark" aria-hidden="true">NT</span>
+    <span class="brand-text">Road Trauma · AUS</span>
+  </a>
+  <a class="nav-link" href="../index.html">Home</a>
+  <a class="nav-link" href="../map_classic_v3/index.html">Chart 1 · Map</a>
+  <a class="nav-link" href="index.html" aria-current="page">Chart 2 · Sankey</a>
+  <a class="nav-link" href="../about.html">About</a>
+</nav>
+
 <!-- Header -->
 <header class="header">
   <div class="header-left">
@@ -570,10 +584,14 @@ let ruIdx = {};
 let totIdx = {};
 
 // ── Theme toggle ───────────────────────────────────
+// Show the right glyph when arriving with a saved light theme
+document.getElementById('theme-btn').textContent =
+  document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
 document.getElementById('theme-btn').addEventListener('click', () => {
   const html = document.documentElement;
   const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
   html.dataset.theme = next;
+  try { localStorage.setItem('rc-theme', next); } catch (e) {}
   document.getElementById('theme-btn').textContent = next === 'dark' ? '☀' : '🌙';
   if (selectedState) render(selectedState);
   buildLegend();

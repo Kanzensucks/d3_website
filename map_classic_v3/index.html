@@ -6,10 +6,10 @@
   <title>A decade of road-crash hospitalisations · 2011–2021</title>
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="A decade of road-crash hospitalisations" />
-  <meta property="og:description" content="The NT's rate runs 1.8–3× the national average, 2011–2021. Explore by sex, age or road-user role." />
+  <meta property="og:description" content="The NT's rate runs above the national average every year, 2011–2021 — up to 2.2×. Explore by sex, age or road-user role." />
   <meta name="twitter:card"       content="summary" />
   <meta name="twitter:title"      content="A decade of road-crash hospitalisations" />
-  <meta name="twitter:description" content="The NT's rate runs 1.8–3× the national average, 2011–2021." />
+  <meta name="twitter:description" content="The NT's rate runs above the national average every year, 2011–2021 — up to 2.2×." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8523a'/%3E%3Ctext x='4' y='22' font-size='16' font-weight='700' fill='white' font-family='sans-serif'%3ENT%3C/text%3E%3C/svg%3E" />
   <link rel="preload" href="../data/state_year_per100k.csv"  as="fetch" crossorigin />
   <link rel="preload" href="../data/aus_states.geojson"      as="fetch" crossorigin />
@@ -18,9 +18,37 @@
   <link rel="preload" href="../data/state_year_roaduser.csv" as="fetch" crossorigin />
   <link rel="preload" href="../data/population_clean.csv"    as="fetch" crossorigin />
   <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
+  <link rel="stylesheet" href="../assets/nav.css" />
   <link rel="stylesheet" href="map_classic_v3.css?v=2" />
+  <style>
+    /* With the 44px site nav above, .page can't be 100% of the viewport
+       any more — let flexbox give it the remaining height instead.
+       (Below 760px the stylesheet already switches to height:auto.) */
+    @media (min-width: 760px) {
+      .page { height: auto; flex: 1 1 auto; min-height: 0; }
+    }
+    /* Pre-existing mobile bug fix: with .page{height:auto} below 760px the
+       flex/grid chain (.stage-row → .map-stage → .map-main) resolves to zero
+       height, hiding the map entirely. Floor each level of the chain. */
+    @media (max-width: 759px) {
+      .stage-row { min-height: calc(62vw + 130px); }
+      .map-stage { min-height: calc(62vw + 112px); }
+      .map-main  { min-height: calc(62vw + 80px); }
+    }
+  </style>
 </head>
 <body>
+  <nav class="site-nav" aria-label="Site">
+    <a class="brand" href="../index.html">
+      <span class="brand-mark" aria-hidden="true">NT</span>
+      <span class="brand-text">Road Trauma · AUS</span>
+    </a>
+    <a class="nav-link" href="../index.html">Home</a>
+    <a class="nav-link" href="index.html" aria-current="page">Chart 1 · Map</a>
+    <a class="nav-link" href="../sankey_v1/index.html">Chart 2 · Sankey</a>
+    <a class="nav-link" href="../about.html">About</a>
+  </nav>
   <main class="page">
     <header class="masthead">
       <h1>A decade of road-crash hospitalisations, state by state</h1>
@@ -156,8 +184,8 @@
 
     <footer class="footer">
       <p>
-        Source: AIHW hospitalised road-crash injuries; ABS state populations.
-        Visualisation by Team 99 (Hamish Hooley &amp; Kanzen Ong).
+        Source: BITRE hospitalised road-crash injuries; ABS state populations.
+        Visualisation by Team 1 (Hamish Hooley &amp; Kanzen Ong).
         Rates are always per 100,000 of <em>total</em> state population
         (no stratified denominators available).
         Non-trivial code blocks generated with Claude (GenAI) are marked
@@ -168,10 +196,14 @@
 
   <script src="map_classic_v3.js?v=1"></script>
   <script>
+    // Show the right glyph when arriving with a saved light theme
+    document.getElementById('theme-toggle-btn').textContent =
+      document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
     document.getElementById('theme-toggle-btn').addEventListener('click', function() {
       const html = document.documentElement;
       const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
       html.dataset.theme = next;
+      try { localStorage.setItem('rc-theme', next); } catch (e) {}
       this.textContent = next === 'dark' ? '☀' : '🌙';
       // Redraw D3 elements that use hardcoded colours from JS
       if (typeof drawLegend === 'function')              drawLegend();
