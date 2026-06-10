@@ -20,7 +20,7 @@
     document.getElementById("stat-change").textContent = pct;
     document.getElementById("stat-roaduser").textContent = ru;
     document.getElementById("stat-roaduser-sub").textContent =
-      fmt(ruCases) + " cases — among recorded categories; vehicle occupants are not separately recorded.";
+      fmt(ruCases) + " cases — among recorded categories; vehicle occupants are not separately recorded (Chart 2 derives them by subtraction).";
   }
 
   Promise.all([

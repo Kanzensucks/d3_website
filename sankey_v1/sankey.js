@@ -383,6 +383,7 @@ function showNodeTip(e, n, stateTot) {
     <div class="tip-row"><span class="tip-k">Cases</span><span class="tip-v">${val.toLocaleString()}</span></div>
     ${n.type==='ru' ? `<div class="tip-row"><span class="tip-k">Share of state</span><span class="tip-v">${pct}%</span></div>` : ''}
     ${rate ? `<div class="tip-row"><span class="tip-k">Rate /100k</span><span class="tip-v">${rate}</span></div>` : ''}
+    ${n.name==='Vehicle occupant' ? `<div class="tip-note">Derived: total hospitalisations minus the five recorded road-user categories</div>` : ''}
   `;
   tipEl.style.display = 'block';
   moveTip(e);
