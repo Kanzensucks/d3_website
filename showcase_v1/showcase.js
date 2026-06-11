@@ -1725,11 +1725,7 @@ canvas.addEventListener('click', (e) => {
     if (settled) emitWave(mx, my, 16);    // tap the swarm — it ripples
     return;
   }
-  if (!settled) return;
-  for (const d of discs) {
-    if (Math.hypot(d.x - mx, d.y - my) <= d.r + 2) { openPanel(d.si); return; }
-  }
-  if (panelOpen) closePanel();
+  // Act 3 discs are non-interactive in swarm
 });
 
 /* Partition chips */
