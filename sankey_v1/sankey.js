@@ -49,14 +49,14 @@ let totIdx = {};
 
 // ── Theme toggle ───────────────────────────────────
 // Show the right glyph when arriving with a saved light theme
-document.getElementById('theme-btn').textContent =
+document.getElementById('nav-theme-btn').textContent =
   document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
-document.getElementById('theme-btn').addEventListener('click', () => {
+document.getElementById('nav-theme-btn').addEventListener('click', () => {
   const html = document.documentElement;
   const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
   html.dataset.theme = next;
   try { localStorage.setItem('rc-theme', next); } catch (e) {}
-  document.getElementById('theme-btn').textContent = next === 'dark' ? '☀' : '🌙';
+  document.getElementById('nav-theme-btn').textContent = next === 'dark' ? '☀' : '🌙';
   if (selectedState) render(selectedState);
   buildLegend();
 });

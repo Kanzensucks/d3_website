@@ -121,3 +121,24 @@
   .site-nav .brand { margin-right: 6px; }
   .site-nav a.nav-link { padding: 0 8px; font-size: .58rem; }
 }
+
+/* Shared footer bar — used on all chart pages */
+.page-footer {
+  flex-shrink: 0;
+  padding: 5px 20px;
+  border-top: 1px solid var(--nav-rule);
+  background: var(--nav-bg);
+  color: var(--nav-soft);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .58rem;
+  line-height: 1.5;
+}
+
+.page-footer code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .55rem;
+  background: var(--nav-surface);
+  border: 1px solid var(--nav-rule2);
+  border-radius: 3px;
+  padding: 1px 4px;
+}

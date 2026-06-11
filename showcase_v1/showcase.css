@@ -25,6 +25,7 @@
   --accent2:   #ff7f68;
   --accent-soft: rgba(232,82,58,.18);
   --shadow:    0 24px 64px rgba(0,0,0,.7);
+  --cap-bg:    rgba(22,28,40,.82);   /* translucent caption — swarm shows through */
   /* swarm state ramp (NT is always --accent) */
   --dot-1: #5b7da0;  /* NSW */
   --dot-2: #4f9e8f;  /* Vic */
@@ -57,6 +58,7 @@
   --accent2:   #e05a3a;
   --accent-soft: rgba(200,57,30,.12);
   --shadow:    0 24px 64px rgba(0,0,0,.12);
+  --cap-bg:    rgba(247,244,240,.85);   /* translucent caption — swarm shows through */
   --dot-1: #3d5a78;
   --dot-2: #2f7a6b;
   --dot-3: #56647e;
@@ -135,7 +137,7 @@ body {
 .hdr {
   position: absolute;
   top: 14px; left: 20px;
-  max-width: 560px;
+  width: 280px;
   z-index: 5;
   pointer-events: none;
 }
@@ -249,34 +251,235 @@ body {
 .rail-skip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ── Caption card ───────────────────────────────── */
+/* glass surface so the swarm shows through — it no longer blocks the display */
 .caption-card {
   position: absolute;
   left: 84px;
   bottom: 20px;
-  width: 350px;
-  background: var(--surface2);
-  border: 1px solid var(--line);
+  width: 322px;
+  background-color: var(--cap-bg);
+  backdrop-filter: blur(13px) saturate(1.1);
+  -webkit-backdrop-filter: blur(13px) saturate(1.1);
+  border: 1px solid var(--line2);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 8px 12px;
   z-index: 5;
   box-shadow: var(--shadow);
-  transition: background var(--dur) ease, border-color var(--dur) ease;
+  touch-action: none;
+  user-select: none;
+  overflow: hidden;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease;
+}
+.caption-card.is-dragging {
+  z-index: 99;
+}
+/* Position variants for different scenes — acts 2 & 5 move to avoid blocking view */
+.caption-card.act-0,
+.caption-card.act-1,
+.caption-card.act-3,
+.caption-card.act-4 {
+  left: 84px;
+  bottom: 20px;
+}
+.caption-card.act-2,
+.caption-card.act-5 {
+  left: auto;
+  right: 20px;
+  bottom: 20px;
 }
 .caption-card h2 {
   font-size: .92rem;
   font-weight: 700;
   letter-spacing: -.01em;
-  margin-bottom: 5px;
+  margin: 0 0 2px 0;
+  padding-right: 22px;       /* clear the collapse button */
+  cursor: grab;
+}
+.caption-card h2:active { cursor: grabbing; }
+.caption-card.is-dragging h2 { cursor: grabbing; }
+
+/* collapse / restore toggle */
+.cap-collapse {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 20px; height: 20px;
+  line-height: 1;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-mute);
+  cursor: pointer;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur) ease;
+}
+.cap-collapse:hover { border-color: var(--accent); color: var(--accent); }
+.cap-collapse:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.caption-card.is-collapsed p,
+.caption-card.is-collapsed .cap-legend,
+.caption-card.is-collapsed .partition-chips { display: none; }
+
+/* Dimension bar — bottom-centre strip, Act 4 only */
+.dim-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cap-bg);
+  backdrop-filter: blur(13px) saturate(1.1);
+  -webkit-backdrop-filter: blur(13px) saturate(1.1);
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  padding: 8px 16px;
+  z-index: 5;
+  box-shadow: var(--shadow);
+}
+.dim-bar[hidden] { display: none !important; }
+.dim-bar-sep { width: 1px; height: 18px; background: var(--line2); flex-shrink: 0; }
+.ghost-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: .04em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--dur) ease;
+}
+.ghost-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ghost-btn.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.dim-bar-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.dim-bar .partition-chips { margin-top: 0; }
+.caption-card.is-collapsed h2 { margin-bottom: 0; }
+
+/* notes appended to the caption by ghost mode / dot tracking */
+.caption-card .ghost-note,
+.caption-card .track-note {
+  display: block;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--line2);
+  color: var(--ink-soft);
+  font-size: .85em;
+}
+
+/* ── Held frame — the cinema "moment of silence" ── */
+.held-line {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .7s ease;
+}
+.held-line[hidden] { display: none; }
+.held-line.is-on { opacity: 1; }
+.held-line p {
+  max-width: 640px;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--ink);
+  text-shadow: 0 2px 18px var(--bg), 0 0 40px var(--bg);
+  padding: 0 24px;
+}
+.stage.is-held .hdr,
+.stage.is-held .controls,
+.stage.is-held .rail,
+.stage.is-held .rail-skip,
+.stage.is-held .caption-card,
+.stage.is-held .dim-bar,
+.stage.is-held .scroll-hint,
+.stage.is-held .minimap {
+  opacity: .05;
+  transition: opacity .9s ease;
+}
+
+
+/* giant editorial numeral behind each scene */
+.act-ghost-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 230px;
+  font-weight: 800;
+  letter-spacing: -.05em;
+  fill: var(--ink);
+  opacity: .04;
+  pointer-events: none;
+}
+
+/* per-scene colour key — tells the viewer what the dot colours mean */
+.cap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+.legend-cap {
+  width: 100%;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .54rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 2px 0;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .62rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 2px 8px 2px 5px;
+  cursor: pointer;
+  transition: all var(--dur) ease;
+}
+.legend-item:hover { border-color: var(--line2); color: var(--ink); }
+.legend-item.is-spot { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.legend-item.is-nt { color: var(--accent); font-weight: 500; }
+.legend-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.legend-sw {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .caption-card p {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: .72rem;
-  line-height: 1.55;
+  font-size: .68rem;
+  line-height: 1.2;
   color: var(--ink-soft);
+  margin: 0;
 }
 .caption-card p .em { color: var(--accent); font-weight: 500; }
 
-.partition-chips { display: flex; gap: 6px; margin-top: 10px; }
+.partition-chips { display: flex; gap: 6px; margin-top: 4px; }
 .p-chip {
   font-family: 'IBM Plex Mono', monospace;
   font-size: .6rem;
@@ -318,6 +521,11 @@ body {
 .chip-btn { cursor: pointer; }
 .chip-btn:hover { border-color: var(--accent); color: var(--accent); }
 .chip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip-btn.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 .chip-mode {
   color: var(--ink);
   font-weight: 500;
@@ -492,9 +700,10 @@ body {
   backdrop-filter: blur(3px);
   z-index: 8;
   opacity: 0;
+  pointer-events: none;
   transition: opacity .5s ease;
 }
-.end-scrim.is-on { opacity: 1; }
+.end-scrim.is-on { opacity: 1; pointer-events: auto; }
 .end-card {
   width: 520px;
   max-width: calc(100% - 48px);
@@ -530,6 +739,8 @@ body {
 }
 #end-stats li b { color: var(--ink); font-weight: 500; }
 #end-stats li .em { color: var(--accent); font-weight: 500; }
+#end-stats li.end-live { color: var(--accent); border-bottom: none; }
+#end-stats li.end-live b { color: var(--accent); }
 .end-actions { display: flex; gap: 10px; margin-bottom: 14px; }
 .end-btn {
   font-family: 'Syne', sans-serif;

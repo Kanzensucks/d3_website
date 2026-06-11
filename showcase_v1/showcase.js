@@ -24,6 +24,7 @@ const TAU = Math.PI * 2;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 
 const fc = d3.format(','), f1 = d3.format('.1f'), f2 = d3.format('.2f');
+const pageLoadT = Date.now();   // for the end-card "while you've been here" line
 
 // Deterministic per-dot hash (no Math.random — layouts must be stable)
 function mulberry32(a) {
@@ -46,6 +47,7 @@ const tipEl    = document.getElementById('tip');
 /* ── §2 Theme tokens & sprite atlas ──────────────────────── */
 let pal = null;          // palette object read from CSS custom properties
 let sprites = [];        // sprites[colorIdx][sizeIdx] = offscreen canvas
+let ghostSprites = [];   // hollow ring variants — counterfactual "excess" dots
 const SIZES = [1.8, 2.2, 3.0];          // S, M, L dot radii (css px)
 const SPRITE_GLOW = 2.4;
 
@@ -93,13 +95,32 @@ function buildSprites() {
     c._half = R;                                          // css-px half size
     return c;
   }));
+  // GenAI-assisted (Claude): hollow ring variants for the counterfactual
+  // ("excess") dots in act 4 — outline only, no glow, one size
+  ghostSprites = pal.colors.map((col) => {
+    const r = 2.6, R = Math.ceil(r) + 3;
+    const c = document.createElement('canvas');
+    c.width = c.height = R * 2 * dpr;
+    const g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    g.strokeStyle = col;
+    g.lineWidth = 1.1;
+    g.beginPath(); g.arc(R, R, r, 0, TAU); g.stroke();
+    c._half = R;
+    return c;
+  });
 }
 
 /* ── Stage geometry ──────────────────────────────────────── */
 let W = 0, H = 0, DPR = 1, dprCap = Infinity;
-const MARGIN = { top: 96, right: 96, bottom: 88, left: 96 };
+const MARGIN = { top: 200, right: 96, bottom: 200, left: 140 };
 let plot = { x0: 0, x1: 0, y0: 0, y1: 0 };
 let panelOpen = false;
+
+/* Caption card drag/resize state */
+let captionPos = { left: null, right: null, bottom: null, top: null, width: null, height: null };
+let captionDragging = false;
+let dragStart = { x: 0, y: 0, captionX: 0, captionY: 0 };
 
 function sizeStage() {
   const r = stageEl.getBoundingClientRect();
@@ -134,6 +155,7 @@ let minutes  = new Map();     // year -> minutes between hospitalisations
 let voRes    = new Map();     // `${state}|${year}` -> derived vehicle-occupant cases
 let totalCases = 0;
 let stateTotals = new Map();  // state -> decade cases
+let ntExcess = 0, ntExcessFrac = 0;  // NT cases above the at-national-rate expectation
 const audit = { reconciled: false, totA: 0, totB: 0, voClamps: 0, ageGaps: 0, sexGaps: 0, geoOk: false, censusOk: false };
 
 function loadData() {
@@ -167,6 +189,12 @@ function deriveAll() {
     const natCases = trend.find(t => t.year === y).cases;
     minutes.set(y, 525600 / natCases);
   });
+  // Counterfactual: NT cases had it run at the national rate each year.
+  // expected(y) = cases(y) ÷ multiple(y); excess = actual − expected.
+  let ntExpected = 0;
+  YEARS.forEach(y => { ntExpected += rate$.get(`NT|${y}`).cases / ntMult.get(y); });
+  ntExcess = stateTotals.get('NT') - ntExpected;
+  ntExcessFrac = ntExcess / stateTotals.get('NT');
   // Vehicle-occupant residual — byte-for-byte the Sankey page's rule
   STATES.forEach(s => YEARS.forEach(y => {
     const tot = rate$.get(`${s}|${y}`).cases;
@@ -203,6 +231,8 @@ let cohorts = [];             // {si, yi, state, year, cases, start, n}
 let dotState, dotYear, dotCohort;            // Uint8 / Uint8 / Uint8
 let labels = {};              // labels[dim] = Uint8Array(N) category index
 let posX, posY, srcX, srcY, tgtX, tgtY, tw0, twDur, phase;
+let velX, velY, sprK, dotFly, dotGhost;   // spring engine + counterfactual flags
+let trackIdx = 0, trackOn = false;        // follow-one-dot
 
 function largestRemainder(total, weights) {
   const sum = d3.sum(weights);
@@ -238,12 +268,20 @@ function buildCensus(unit) {
   tgtX = new Float32Array(N); tgtY = new Float32Array(N);
   tw0  = new Float32Array(N); twDur = new Float32Array(N).fill(1);
   phase = new Float32Array(N);
+  velX = new Float32Array(N); velY = new Float32Array(N);
+  dotFly = new Uint8Array(N);
+  dotGhost = new Uint8Array(N);
+  sprK = new Float32Array(N);
   cohorts.forEach((c, ci) => {
     for (let i = c.start; i < c.start + c.n; i++) {
       dotState[i] = c.si; dotYear[i] = c.yi; dotCohort[i] = ci;
       phase[i] = hash01(i, 11) * TAU;
+      sprK[i] = 26 + hash01(i, 15) * 12;   // per-dot spring stiffness — organic spread
     }
   });
+  // the tracked dot: middle of the NT 2020 cohort (the peak-multiple year)
+  const tc = cohorts.find(c => c.state === 'NT' && c.year === 2020) || cohorts.find(c => c.state === 'NT');
+  trackIdx = tc ? tc.start + Math.floor(tc.n / 2) : 0;
   // Per-dimension category labels: largest remainder inside every cohort,
   // contiguous in fixed category order so colours form readable blocks.
   labels = {};
@@ -318,39 +356,47 @@ function layoutColumns() {
 
 function layoutGeo() {
   const out = new Float32Array(2 * N);
-  // Planar identity like the map page — the geojson winding breaks spherical fills
+  // Extend bounds beyond plot to zoom in (~25% bigger map) — spreads eastern state centroids
   const proj = d3.geoIdentity().reflectY(true)
-    .fitExtent([[plot.x0, plot.y0], [plot.x1, plot.y1]], geo);
+    .fitExtent([[plot.x0 - 80, plot.y0 - 40], [plot.x1 + 40, plot.y1 + 60]], geo);
   const path = d3.geoPath(proj);
-  // adaptive spacing: largest cluster must fit inside ~38% of the plot height
+  // adaptive spacing: 0.28 keeps clusters small enough to spread without mass overlap
   const maxN = d3.max(STATES, s => Math.round(stateTotals.get(s) / UNIT));
-  const sp = Math.min(3.4, (plot.y1 - plot.y0) * 0.38 / Math.sqrt(maxN));
+  const sp = Math.min(3.0, (plot.y1 - plot.y0) * 0.28 / Math.sqrt(maxN));
   const clusters = STATES.map((s, si) => {
     const f = geo.features.find(f => f.properties.code === s);
     let [cx, cy] = path.centroid(f);
     if (s === 'ACT') { cx += 64; cy += 56; }            // it sits inside NSW
     const n = Math.round(stateTotals.get(s) / UNIT);
-    return { si, s, cx, cy, R: sp * Math.sqrt(n), f, trueC: path.centroid(f) };
+    return { si, s, cx, cy, R: sp * Math.sqrt(n), f, trueC: [cx, cy] };
   });
-  // relaxation (overlap) + containment (stage bounds) passes
   const clamp = (c) => {
     c.cx = Math.max(plot.x0 + c.R * 0.7, Math.min(plot.x1 - c.R * 0.7, c.cx));
     c.cy = Math.max(plot.y0 + c.R * 0.7, Math.min(plot.y1 - c.R - 16, c.cy));
   };
-  for (let pass = 0; pass < 3; pass++) {
-    clusters.forEach(clamp);
-    for (let a = 0; a < clusters.length; a++) for (let b = a + 1; b < clusters.length; b++) {
-      const A = clusters[a], B = clusters[b];
-      const dx = B.cx - A.cx, dy = B.cy - A.cy;
-      const d = Math.hypot(dx, dy) || 1, min = A.R + B.R + 8;
-      if (d < min) {
-        const push = (min - d) / 2;
-        A.cx -= dx / d * push; A.cy -= dy / d * push;
-        B.cx += dx / d * push; B.cy += dy / d * push;
+  // overlap separation — drift cap keeps clusters within 150px of true centroid
+  const MAX_DRIFT = 150;
+  for (let pass = 0; pass < 15; pass++) {
+    for (let i = 0; i < clusters.length; i++) {
+      for (let j = i + 1; j < clusters.length; j++) {
+        const ci = clusters[i], cj = clusters[j];
+        const dx = cj.cx - ci.cx, dy = cj.cy - ci.cy;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        const gap = ci.R + cj.R + 10;
+        if (d < gap && d > 0.5) {
+          const push = (gap - d) / d * 0.25;
+          ci.cx -= dx * push; ci.cy -= dy * push;
+          cj.cx += dx * push; cj.cy += dy * push;
+        }
       }
     }
+    clusters.forEach(c => {
+      const dx = c.cx - c.trueC[0], dy = c.cy - c.trueC[1];
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > MAX_DRIFT) { c.cx = c.trueC[0] + dx / d * MAX_DRIFT; c.cy = c.trueC[1] + dy / d * MAX_DRIFT; }
+    });
+    clusters.forEach(clamp);
   }
-  clusters.forEach(clamp);
   const counters = STATES.map(() => 0);
   for (const c of cohorts) {
     const cl = clusters[c.si];
@@ -408,10 +454,19 @@ function layoutStacks(dim) {
     { name: 'Rest of Australia', x: plot.x0 + (plot.x1 - plot.x0) * 0.68, test: i => dotState[i] !== NT_IDX },
   ];
   stackMeta = { dim, sides: [] };
+  if (dotGhost) dotGhost.fill(0);
   for (const side of sides) {
     const members = [];
     for (let i = 0; i < N; i++) if (side.test(i)) members.push(i);
     const byCat = cats.map((c, k) => members.filter(i => lab[i] === k));
+    // GenAI-assisted (Claude): flag the counterfactual excess — within each
+    // NT band, the last round(n × excessFrac) dots render hollow when toggled
+    if (side.name === 'NT' && dotGhost && ntExcessFrac > 0) {
+      byCat.forEach(list => {
+        const nGhost = Math.round(list.length * ntExcessFrac);
+        for (let j = list.length - nGhost; j < list.length; j++) dotGhost[list[j]] = 1;
+      });
+    }
     // band heights + printed % come from CASE counts — dots are ≈50-person
     // units and would quantise the NT side to 0.7pp steps (or drop categories)
     const sideStates = side.name === 'NT' ? ['NT'] : STATES.filter(s => s !== 'NT');
@@ -497,9 +552,22 @@ function layoutStream() {
 let timer = null, running = false;
 let morphEnd = 0, settled = true, trailsOn = false, fadeMode = null; // 'merge' | 'burst'
 let frameTick = 0;
+let lastMaxRes = 0, lastFrameT = 0;     // spring residual + dt bookkeeping
+const FE_R = 90, FE_D = 2.2;            // fisheye radius / distortion (explore mode)
+
+/* GenAI-assisted (Claude): ambient intricacy engine — Delaunay neural web,
+   density topography, shockwaves, cursor force field. All d3-bundle only. */
+let webLayer = null, webDel = null, webPts = null, contourLayer = null;
+let ambientT = 0, ambientTimer = null;
+let waves = [];                          // {x, y, t0, amp} travelling rings
+const WEB_ACTS = { 0: 30, 2: 17, 5: 14 };  // act -> max web edge length (px)
+const WAVE_V = 0.45, WAVE_SIG = 38, WAVE_LIFE = 1600;
+const REPEL_R = 80;
+function ambientOK() { return dprCap === Infinity && !RM; }
 let rmPrev = null, rmFadeEnd = 0;       // reduced-motion crossfade
 let probe = { samples: [], active: false, phase: 0 };
 let quad = null, lensSet = null, mouse = { x: -1e4, y: -1e4 };
+let spotlight = null;          // legend-selected colour group to highlight (null = all)
 
 function ease3(p) { return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; }
 
@@ -523,6 +591,7 @@ function retarget(target, opts = {}) {
     }
     morphEnd = now; settled = false; trailsOn = false; bowAmp = 0;
     rmFadeEnd = now + 320;
+    lastMaxRes = 0;
     wake();
     return;
   }
@@ -531,6 +600,8 @@ function retarget(target, opts = {}) {
   bowAmp = opts.bow ?? 0.08;
   trailsOn = opts.trails !== false && dprCap === Infinity;
   fadeMode = opts.fade || null;
+  dotFly.fill(0);          // springs: every dot re-launches with a fresh kick
+  lastMaxRes = 1e9;
   let end = 0;
   for (let i = 0; i < N; i++) {
     srcX[i] = posX[i]; srcY[i] = posY[i];
@@ -557,12 +628,20 @@ function snapshotForRM() {
 function onSettle() {
   settled = true;
   trailsOn = false;
-  fadeMode = actCur === 3 ? 'merged' : null;
+  fadeMode = null;
   for (let i = 0; i < N; i++) { posX[i] = tgtX[i]; posY[i] = tgtY[i]; }
+  velX.fill(0); velY.fill(0);
   if (actCur !== 3) {
     quad = d3.quadtree().x(i => posX[i]).y(i => posY[i]).addAll(d3.range(N));
   } else quad = null;
   if (probe.active) evalProbe();
+  scheduleAmbient();
+  // settle thump — the swarm lands and breathes one ring outward
+  if (N > 0) {
+    let sx = 0, sy = 0, sn = 0;
+    for (let i = 0; i < N; i += 64) { sx += tgtX[i]; sy += tgtY[i]; sn++; }
+    emitWave(sx / sn, sy / sn, 8);
+  }
 }
 
 function evalProbe() {
@@ -591,6 +670,7 @@ function rebuildUnit(unit) {
     posY[i] = srcY[i] = tgtY[i] = t[2 * i + 1];
     tw0[i] = 0; twDur[i] = 1;
   }
+  velX.fill(0); velY.fill(0); dotFly.fill(0); lastMaxRes = 0;
   morphEnd = 0; settled = false;          // forces onSettle housekeeping next frame
   buildActSvg(actCur);
   wake();
@@ -604,13 +684,16 @@ function frame() {
     probe._last = now;
   } else probe._last = 0;
 
+  const dt = Math.min(0.033, Math.max(0, (now - lastFrameT) / 1000));
+  lastFrameT = now;
   const morphing = now < morphEnd;
-  if (!morphing && !settled) onSettle();
+  // springs settle on residual energy, with a hard failsafe past morphEnd
+  if (!morphing && !settled && (lastMaxRes < 0.7 || now > morphEnd + 1200)) onSettle();
 
   // physics-sleep: settled + idle -> render breathe at half rate; stop entirely when allowed
   if (settled && now > rmFadeEnd) {
     if (RM || document.hidden) { sleep(); return; }
-    if (frameTick % 2) return;
+    if (frameTick % 2 && !(exploreMode && mouse.x > -1e3)) return;  // full rate under the lens
   }
 
   if (trailsOn && morphing) {
@@ -626,8 +709,10 @@ function frame() {
   const colorBase = actCur >= 4 ? (actCur === 5 ? COL_RU : dimOffset(activeDim)) : COL_STATE;
   const labArr = actCur === 5 ? labels.ru : (actCur === 4 ? labels[activeDim] : null);
   const breatheT = now * 0.0015;
-  const inAct3 = actCur === 3;
-  let lastA = 1;
+  const ghostOn = actCur === 4 && ghostMode;
+
+
+  let lastA = 1, frMaxRes = 0;
   ctx.globalAlpha = 1;
 
   for (let i = 0; i < N; i++) {
@@ -637,34 +722,61 @@ function frame() {
       y = tgtY[i] + (RM ? 0 : Math.sin(breatheT + phase[i]) * 0.6);
       if (fadeMode === 'merged') a = 0;
     } else {
+      // GenAI-assisted (Claude): underdamped spring integrator — dots carry
+      // momentum, overshoot a touch and settle, instead of riding an ease curve
       let p = (now - tw0[i]) / twDur[i];
       p = p < 0 ? 0 : p > 1 ? 1 : p;
-      const e = ease3(p);
-      x = srcX[i] + (tgtX[i] - srcX[i]) * e;
-      y = srcY[i] + (tgtY[i] - srcY[i]) * e;
-      if (bowAmp > 0 && p > 0 && p < 1) {
-        const dx = tgtX[i] - srcX[i], dy = tgtY[i] - srcY[i];
-        const d = Math.hypot(dx, dy);
-        if (d > 1) {
-          const s = (hash01(i, 6) > 0.5 ? 1 : -1) * bowAmp * d * Math.sin(Math.PI * p);
-          x += (-dy / d) * s; y += (dx / d) * s;
+      if (now < tw0[i]) {
+        x = srcX[i]; y = srcY[i];
+      } else {
+        if (!dotFly[i]) {                  // launch: lateral kick replaces the bow
+          dotFly[i] = 1;
+          const dx0 = tgtX[i] - srcX[i], dy0 = tgtY[i] - srcY[i];
+          const d0 = Math.hypot(dx0, dy0);
+          if (d0 > 1 && bowAmp > 0) {
+            const kick = (hash01(i, 6) > 0.5 ? 1 : -1) * bowAmp * d0 * 6.5;
+            velX[i] = (-dy0 / d0) * kick;
+            velY[i] = (dx0 / d0) * kick;
+          } else { velX[i] = 0; velY[i] = 0; }
         }
+        const k = sprK[i], damp = 1.4 * Math.sqrt(k);   // ζ ≈ 0.7 — one soft overshoot
+        velX[i] += ((tgtX[i] - posX[i]) * k - velX[i] * damp) * dt;
+        velY[i] += ((tgtY[i] - posY[i]) * k - velY[i] * damp) * dt;
+        x = posX[i] + velX[i] * dt;
+        y = posY[i] + velY[i] * dt;
+        const res = Math.abs(tgtX[i] - x) + Math.abs(tgtY[i] - y)
+                  + (Math.abs(velX[i]) + Math.abs(velY[i])) * 0.04;
+        if (res > frMaxRes) frMaxRes = res;
       }
       if (fadeMode === 'merge') a = p > 0.8 ? 1 - (p - 0.8) / 0.2 : 1;
       else if (fadeMode === 'burst') a = p < 0.2 ? p / 0.2 : 1;
     }
     posX[i] = x; posY[i] = y;
+    if (spotlight != null) {
+      const grp = colorBase === COL_STATE ? dotState[i] : labArr[i];
+      if (grp !== spotlight) a *= 0.10;
+    }
     if (a <= 0.02) continue;
+    const ghost = ghostOn && dotGhost[i];
+    if (ghost) a *= 0.55 + 0.3 * Math.sin(now * 0.003 + phase[i]);   // slow pulse
     if (a !== lastA) { ctx.globalAlpha = a; lastA = a; }
     const ci = colorBase === COL_STATE ? dotState[i] : colorBase + labArr[i];
+    if (ghost) {
+      const gs = ghostSprites[ci], gh = gs._half;
+      ctx.drawImage(gs, x - gh, y - gh, gh * 2, gh * 2);
+      continue;
+    }
     const sz = (lensSet && lensSet.has(i)) ? 2 : (actCur === 1 ? 1 : 0);
     const sp = sprites[ci][sz];
     const half = sp._half;
     ctx.drawImage(sp, x - half, y - half, half * 2, half * 2);
   }
   ctx.globalAlpha = 1;
+  if (!settled) lastMaxRes = frMaxRes;
 
   if (inAct3 || discFade > 0) drawDiscs(now, morphing);
+
+  if (trackOn) drawTracker(now);
 
   if (RM && now < rmFadeEnd && rmPrev) {
     ctx.globalAlpha = (rmFadeEnd - now) / 320;
@@ -697,6 +809,7 @@ function drawDiscs(now, morphing) {
       a = discFade * Math.max(0, 1 - (now - discLeaveT) / 180);
     }
     if (focusYear != null && d.year !== focusYear) a *= 0.3;
+    if (spotlight != null && d.si !== spotlight) a *= 0.14;
     if (a <= 0.02) continue;
     ctx.globalAlpha = a;
     if (d.si === NT_IDX) {
@@ -716,6 +829,161 @@ function retargetDiscs(du = 320) {
   const now = performance.now();
   for (const d of discs) { d.sx = d.x; d.sy = d.y; d.t0 = now; d.du = du; }
   wake();
+}
+
+/* GenAI-assisted (Claude): follow-one-dot — ring-buffer trail + halo + label.
+   In act 3 the dots hide inside their cohort discs, so the halo hands over
+   to the disc that contains the tracked dot. */
+let trailBuf = new Float32Array(2 * 64), trailLen = 0, trailHead = 0, trailTick = 0;
+function drawTracker(now) {
+  let tx, ty, inDisc = false;
+  if (actCur === 3) {
+    const d = discs[dotCohort[trackIdx]];
+    if (!d) return;
+    tx = d.x; ty = d.y; inDisc = true;
+  } else { tx = posX[trackIdx]; ty = posY[trackIdx]; }
+  if (++trailTick % 2 === 0) {
+    trailBuf[2 * trailHead] = tx; trailBuf[2 * trailHead + 1] = ty;
+    trailHead = (trailHead + 1) % 64;
+    if (trailLen < 64) trailLen++;
+  }
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = pal.accent;
+  for (let s = 0; s < trailLen - 1; s++) {
+    const i0 = (trailHead - trailLen + s + 128) % 64;
+    const i1 = (trailHead - trailLen + s + 1 + 128) % 64;
+    ctx.globalAlpha = (s / trailLen) * 0.38 + 0.04;
+    ctx.beginPath();
+    ctx.moveTo(trailBuf[2 * i0], trailBuf[2 * i0 + 1]);
+    ctx.lineTo(trailBuf[2 * i1], trailBuf[2 * i1 + 1]);
+    ctx.stroke();
+  }
+  const pulse = 1 + 0.15 * Math.sin(now * 0.004);
+  ctx.strokeStyle = pal.ink;
+  ctx.lineWidth = 1.4;
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.arc(tx, ty, (inDisc ? 14 : 7) * pulse, 0, TAU); ctx.stroke();
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath(); ctx.arc(tx, ty, (inDisc ? 20 : 12) * pulse, 0, TAU); ctx.stroke();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = pal.ink;
+  ctx.font = '10px "IBM Plex Mono", monospace';
+  const flip = tx > W - 200;
+  ctx.textAlign = flip ? 'right' : 'left';
+  ctx.fillText(inDisc ? `◎ our dot is in this disc — NT 2020` : `◎ ≈${UNIT} people — NT, 2020`,
+    tx + (flip ? -16 : 16), ty - 12);
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
+}
+
+/* GenAI-assisted (Claude): ambient layers are rebuilt once per settle —
+   never per frame — then composited as cached offscreen bitmaps. */
+function scheduleAmbient() {
+  webLayer = contourLayer = null; webDel = null; webPts = null;
+  clearTimeout(ambientTimer);
+  if (!ambientOK()) return;
+  const act = actCur;
+  // deferred so the settle snap frame paints before the (one-off) build cost
+  ambientTimer = setTimeout(() => { if (settled && actCur === act) buildAmbient(); }, 80);
+}
+
+function buildAmbient() {
+  ambientT = performance.now();
+  const ldpr = Math.min(DPR, 1.5);
+  // 1 — Delaunay neural web: every dot threaded to its natural neighbours
+  if (WEB_ACTS[actCur] != null) {
+    const pts = new Float64Array(2 * N);
+    for (let i = 0; i < N; i++) { pts[2 * i] = tgtX[i]; pts[2 * i + 1] = tgtY[i]; }
+    webDel = new d3.Delaunay(pts);
+    webPts = pts;
+    const max = WEB_ACTS[actCur];
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(W * ldpr));
+    c.height = Math.max(1, Math.round(H * ldpr));
+    const g = c.getContext('2d');
+    g.scale(ldpr, ldpr);
+    g.strokeStyle = pal.inkSoft;
+    g.lineWidth = 0.55;
+    const { halfedges, triangles } = webDel;
+    // two passes: faint long threads, slightly brighter short ones
+    for (const [amax, alpha] of [[max, 0.045], [max * 0.55, 0.055]]) {
+      const m2 = amax * amax;
+      g.globalAlpha = alpha;
+      g.beginPath();
+      for (let e = 0; e < halfedges.length; e++) {
+        if (halfedges[e] !== -1 && halfedges[e] < e) continue;   // dedupe twin edges
+        const p = triangles[e], q = triangles[e % 3 === 2 ? e - 2 : e + 1];
+        const dx = pts[2 * p] - pts[2 * q], dy = pts[2 * p + 1] - pts[2 * q + 1];
+        if (dx * dx + dy * dy > m2) continue;
+        g.moveTo(pts[2 * p], pts[2 * p + 1]);
+        g.lineTo(pts[2 * q], pts[2 * q + 1]);
+      }
+      g.stroke();
+    }
+    webLayer = c;
+  }
+  // 2 — density topography (act 2): crash-density contour "elevation" lines
+  if (actCur === 2) {
+    const sample = [];
+    for (let i = 0; i < N; i += 3) sample.push(i);
+    const dens = d3.contourDensity()
+      .x(i => tgtX[i]).y(i => tgtY[i])
+      .size([W, H]).bandwidth(22).thresholds(9)(sample);
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(W * ldpr));
+    c.height = Math.max(1, Math.round(H * ldpr));
+    const g = c.getContext('2d');
+    g.scale(ldpr, ldpr);
+    const path = d3.geoPath(null, g);
+    dens.forEach((ct, k) => {
+      g.globalAlpha = 0.05 + (k / dens.length) * 0.10;
+      g.strokeStyle = pal.accent;
+      g.lineWidth = 0.7;
+      g.beginPath(); path(ct); g.stroke();
+    });
+    contourLayer = c;
+  }
+  wake();
+}
+
+function emitWave(x, y, amp) {
+  if (!ambientOK()) return;
+  if (waves.length > 3) waves.shift();
+  waves.push({ x, y, t0: performance.now(), amp });
+  wake();
+}
+
+/* near-cursor web relight: BFS the Delaunay neighbours around the pointer
+   and redraw those edges live from displaced dot positions — the web
+   stretches with the dots it connects */
+function drawWebGlow() {
+  const start = webDel.find(mouse.x, mouse.y);
+  if (start == null || start < 0) return;
+  const R2 = 90 * 90;
+  const seen = new Set([start]);
+  const queue = [start];
+  ctx.strokeStyle = pal.accent2;
+  ctx.lineWidth = 0.7;
+  let drawn = 0;
+  while (queue.length && seen.size < 240) {
+    const i = queue.shift();
+    for (const j of webDel.neighbors(i)) {
+      const dx = webPts[2 * j] - mouse.x, dy = webPts[2 * j + 1] - mouse.y;
+      if (dx * dx + dy * dy > R2) continue;
+      if (!seen.has(j)) { seen.add(j); queue.push(j); }
+      if (j < i) continue;                                  // dedupe i—j / j—i
+      const mx = (posX[i] + posX[j]) / 2 - mouse.x, my = (posY[i] + posY[j]) / 2 - mouse.y;
+      const md = Math.sqrt(mx * mx + my * my);
+      if (md > 90) continue;
+      ctx.globalAlpha = (1 - md / 90) * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(posX[i], posY[i]);
+      ctx.lineTo(posX[j], posY[j]);
+      ctx.stroke();
+      if (++drawn > 400) break;
+    }
+  }
+  ctx.globalAlpha = 1;
 }
 
 function dimOffset(dim) { return dim === 'ru' ? COL_RU : dim === 'age' ? COL_AGE : COL_SEX; }
@@ -740,7 +1008,7 @@ const ACT_DEFS = [
   { label: '04 · composition',    title: 'Who gets hurt' },
   { label: '05 · road users',     title: 'Eleven years, one stream' },
 ];
-let actCur = 0, activeDim = 'ru', focusYear = null, exploreMode = false;
+let actCur = 0, activeDim = 'sex', focusYear = null, exploreMode = false;
 let dataReady = false, totalCounted = false;
 let actTimeouts = [];
 function later(ms, fn) { actTimeouts.push(setTimeout(fn, RM ? 0 : ms)); }
@@ -760,7 +1028,10 @@ function goToAct(a, viaCinema = false) {
   const hadPanel = panelOpen;
   closePanel(true);
   hideEndCard();
+  exitHeld();
+  setGhostMode(false);
   lensSet = null;
+  spotlight = null;
   const prev = actCur;
   actCur = a;
   document.getElementById('scroll-hint').classList.add('is-gone');
@@ -799,7 +1070,25 @@ function goToAct(a, viaCinema = false) {
   updateRail();
   updateModeBadge(a);
   updateCaption(a);
-  document.getElementById('partition-chips').hidden = a !== 4;
+  buildLegend(a);
+  document.getElementById('dim-bar').hidden = a !== 4;
+  // Sync chip highlight to activeDim every time Act 4 is entered
+  if (a === 4) {
+    document.querySelectorAll('.p-chip').forEach(b =>
+      b.classList.toggle('is-active', b.dataset.dim === activeDim));
+  }
+
+  // Update caption position class — acts 2 move to right to avoid blocking view
+  // BUT: only apply if user hasn't manually positioned it (no inline left/top set)
+  const captionEl = document.getElementById('caption-card');
+  if (captionEl) {
+    ['act-0', 'act-1', 'act-2', 'act-3', 'act-4', 'act-5'].forEach(cls => captionEl.classList.remove(cls));
+    // Only reset position if the user hasn't manually dragged it
+    const hasManualPos = captionEl.style.left !== '' || captionEl.style.top !== '';
+    if (!hasManualPos && a !== 5) {
+      captionEl.classList.add(`act-${a}`);
+    }
+  }
   if (a !== 3) focusYear = null;
   buildActSvg(a);
   updateCounters(a);
@@ -886,6 +1175,11 @@ function buildActSvg(a) {
   });
   const g = gActs[a];
   g.selectAll('*').remove();
+  // giant editorial numeral watermarked behind each scene
+  g.append('text').attr('class', 'act-ghost-num')
+    .attr('x', W - 28).attr('y', (plot.y0 + plot.y1) / 2 + 90)
+    .attr('text-anchor', 'end')
+    .text(String(a).padStart(2, '0'));
   if (a === 1) buildSvg1(g);
   if (a === 2) buildSvg2(g);
   if (a === 3) buildSvg3(g);
@@ -1113,14 +1407,115 @@ function updateCaption(a) {
     }
   } else if (a === 4) {
     const d = stackMeta.divergence;
-    html = d ? `Same dots, split by ${em(DIM_NAME[activeDim])}. Biggest gap: ${em(d.cat)} — ${em(f1(d.a) + '%')} of the NT's burden vs ${f1(d.b)}% in the rest of Australia.` : '';
+    tEl.textContent = `Who gets hurt · by ${DIM_NAME[activeDim]}`;
+    html = `Each column is one state — colours show how ${em(DIM_NAME[activeDim])} splits the hospitalisations within it.`
+      + (d ? ` Biggest NT gap: ${em(d.cat)} makes up ${em(f1(d.a) + '%')} of NT cases vs ${em(f1(d.b) + '%')} nationally.` : '')
+      + (ghostMode ? `<span class="ghost-note">◌ At the national rate, ≈${em(fc(Math.round(ntExcess)))} of the NT's ${fc(stateTotals.get('NT'))} hospitalisations — its hollow dots — would never have happened.</span>` : '');
   } else if (a === 5) {
     const sums = RU_CATS.map(c => [c, d3.sum(STATES, s => d3.sum(YEARS, y => catCases('ru', s, y, c)))]);
     sums.sort((x, y) => y[1] - x[1]);
     html = `The national burden by road user. ${em(sums[0][0] + 's')} are the largest group — ${em(f1(sums[0][1] / totalCases * 100) + '%')} of the decade — with ${sums[1][0].toLowerCase()}s second at ${f1(sums[1][1] / totalCases * 100)}%.`;
   }
+  if (trackOn) html += `<span class="track-note">◎ following one dot — ≈${UNIT} people, NT 2020 — ringed on the canvas.</span>`;
   bEl.innerHTML = html;
 }
+
+/* Per-scene colour legend — what the dot colours encode this act.
+   Scenes 0–3 colour by state; 4 by the active partition; 5 by road user.
+   Each swatch is clickable to spotlight that group (dims all others). */
+function buildLegend(a) {
+  const wrap = document.getElementById('cap-legend');
+  if (!wrap) return;
+  let groups, key;
+  if (a <= 3) {
+    groups = STATES.map((s, si) => ({ idx: si, label: s, color: pal.colors[si], nt: si === NT_IDX }));
+    key = 'state';
+  } else if (a === 4) {
+    const cats = DIMS[activeDim], off = dimOffset(activeDim);
+    groups = cats.map((c, k) => ({ idx: k, label: c, color: pal.colors[off + k] }));
+    key = DIM_NAME[activeDim];
+  } else {
+    groups = RU_CATS.map((c, k) => ({ idx: k, label: c, color: pal.colors[COL_RU + k] }));
+    key = 'road user';
+  }
+  wrap.innerHTML =
+    `<span class="legend-cap">coloured by ${key} · click to spotlight</span>` +
+    groups.map(g =>
+      `<button class="legend-item${g.nt ? ' is-nt' : ''}${spotlight === g.idx ? ' is-spot' : ''}" ` +
+      `data-grp="${g.idx}" type="button">` +
+      `<span class="legend-sw" style="background:${g.color}"></span>${g.label}</button>`
+    ).join('');
+}
+
+document.getElementById('cap-legend').addEventListener('click', (e) => {
+  const btn = e.target.closest('.legend-item');
+  if (!btn) return;
+  const g = +btn.dataset.grp;
+  spotlight = spotlight === g ? null : g;
+  document.querySelectorAll('#cap-legend .legend-item').forEach(b =>
+    b.classList.toggle('is-spot', spotlight != null && +b.dataset.grp === spotlight));
+  wake();
+});
+
+document.getElementById('cap-collapse').addEventListener('click', () => {
+  const card = document.getElementById('caption-card');
+  const collapsed = card.classList.toggle('is-collapsed');
+  document.getElementById('cap-collapse').textContent = collapsed ? '+' : '–';
+});
+
+/* Caption card drag & resize — user can move/size it anywhere */
+function resetCaptionPosition() {
+  const card = document.getElementById('caption-card');
+  if (!card) return;
+  captionPos = { left: null, right: null, bottom: null, top: null, width: null, height: null };
+  card.style.left = '';
+  card.style.right = '';
+  card.style.bottom = '';
+  card.style.top = '';
+  card.style.width = '';
+  card.style.height = '';
+  card.classList.remove('is-dragging', 'is-resizing');
+}
+
+const captionCard = document.getElementById('caption-card');
+const captionTitle = document.getElementById('cap-title');
+captionTitle.addEventListener('mousedown', (e) => {
+  if (captionDragging) return;
+  captionDragging = true;
+  const rect = captionCard.getBoundingClientRect();
+  dragStart = { x: e.clientX, y: e.clientY, captionX: rect.left, captionY: rect.top };
+  // Remove act classes so their bottom/left CSS rules can't fight inline top/left
+  ['act-0','act-1','act-2','act-3','act-4','act-5'].forEach(c => captionCard.classList.remove(c));
+  // Explicitly override bottom/right to 'auto' — clearing '' would just restore the class values
+  captionCard.style.bottom = 'auto';
+  captionCard.style.right = 'auto';
+  captionCard.style.left = rect.left - stageEl.getBoundingClientRect().left + 'px';
+  captionCard.style.top  = rect.top  - stageEl.getBoundingClientRect().top  + 'px';
+  captionCard.classList.add('is-dragging');
+  e.preventDefault();
+  e.stopPropagation();
+});
+
+
+document.addEventListener('mousemove', (e) => {
+  if (!captionDragging) return;
+  const stageRect = stageEl.getBoundingClientRect();
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  const newLeft = Math.max(0, Math.min(stageRect.width - 100, dragStart.captionX - stageRect.left + dx));
+  const newTop  = Math.max(0, Math.min(stageRect.height - 40, dragStart.captionY - stageRect.top  + dy));
+  captionCard.style.left = newLeft + 'px';
+  captionCard.style.top  = newTop  + 'px';
+  captionPos.left = newLeft;
+  captionPos.top  = newTop;
+});
+
+document.addEventListener('mouseup', () => {
+  if (captionDragging) {
+    captionDragging = false;
+    captionCard.classList.remove('is-dragging');
+  }
+});
 
 let countUpTimer = null;
 function updateCounters(a) {
@@ -1310,6 +1705,7 @@ canvas.addEventListener('mousemove', (e) => {
     wake();
   }
   const i = quad.find(mouse.x, mouse.y, 14);
+  canvas.style.cursor = i == null ? '' : 'crosshair';   // signal dots are inspectable
   if (i == null) { hideTip(); return; }
   const c = cohorts[dotCohort[i]];
   let extra = '';
@@ -1318,12 +1714,16 @@ canvas.addEventListener('mousemove', (e) => {
   if (actCur === 1) extra = `<br><span class="tip-k">${fc(trend.find(t => t.year === c.year).cases)} national cases in ${c.year}</span>`;
   showTip(e, `<b>≈ ${UNIT} people</b> — ${c.state}, ${c.year}${extra}`);
 });
-canvas.addEventListener('mouseleave', () => { hideTip(); lensSet = null; mouse.x = mouse.y = -1e4; });
+canvas.addEventListener('mouseleave', () => { hideTip(); lensSet = null; canvas.style.cursor = ''; mouse.x = mouse.y = -1e4; });
 canvas.addEventListener('click', (e) => {
   cinemaPause();
-  if (actCur !== 3 || !settled) return;
   const r = canvas.getBoundingClientRect();
   const mx = e.clientX - r.left, my = e.clientY - r.top;
+  if (actCur !== 3) {
+    if (settled) emitWave(mx, my, 16);    // tap the swarm — it ripples
+    return;
+  }
+  if (!settled) return;
   for (const d of discs) {
     if (Math.hypot(d.x - mx, d.y - my) <= d.r + 2) { openPanel(d.si); return; }
   }
@@ -1336,10 +1736,12 @@ document.querySelectorAll('.p-chip').forEach(btn => {
     if (btn.dataset.dim === activeDim) return;
     activeDim = btn.dataset.dim;
     document.querySelectorAll('.p-chip').forEach(b => b.classList.toggle('is-active', b === btn));
+    spotlight = null;
     layouts[4] = layoutStacks(activeDim);
-    retarget(layouts[4], { stagger: 'cat', bow: 0.05, spread: 400 });
+    retarget(layouts[4], { stagger: 'none', bow: 0 });
     buildActSvg(4);
     updateCaption(4);
+    buildLegend(4);
   });
 });
 
@@ -1350,10 +1752,19 @@ function showEndCard() {
   const pct = (trend.at(-1).cases - trend[0].cases) / trend[0].cases * 100;
   document.getElementById('end-headline').innerHTML =
     `One territory drives <span class="hl">on a different road</span>.`;
+  // GenAI-assisted (Claude): "while you've been here" — binds the data's pace
+  // to the reader's own elapsed session
+  const elapsed = (Date.now() - pageLoadT) / 60000;
+  const pace = minutes.get(YEARS.at(-1));
+  const est = elapsed / pace;
+  const live = est >= 1
+    ? `In the <b>${f1(elapsed)} minutes</b> you've had this page open: roughly <b>${Math.round(est)}</b> more ${Math.round(est) === 1 ? 'Australian was' : 'Australians were'} hospitalised`
+    : `You've had this page open <b>${f1(elapsed)} minutes</b> — at the 2021 pace, the next hospitalisation arrives in about <b>${f1(Math.max(0.1, pace - elapsed))} minutes</b>`;
   document.getElementById('end-stats').innerHTML = `
     <li><b>${fc(totalCases)}</b> hospitalised road-crash injuries, 2011–2021</li>
     <li><b>+${f1(pct)}%</b> over the decade — one every <b>${f1(minutes.get(YEARS.at(-1)))} minutes</b> by 2021</li>
-    <li>The NT ran <span class="em">${f2(lo)}–${f2(hi)}×</span> the national rate — above average <b>all 11 years</b>, peaking in ${peakY}</li>`;
+    <li>The NT ran <span class="em">${f2(lo)}–${f2(hi)}×</span> the national rate — above average <b>all 11 years</b>, peaking in ${peakY}</li>
+    <li class="end-live">${live}</li>`;
   const sc = document.getElementById('end-scrim');
   sc.hidden = false;
   requestAnimationFrame(() => sc.classList.add('is-on'));
@@ -1378,15 +1789,63 @@ document.getElementById('end-scrim').addEventListener('click', (e) => {
 });
 
 /* Explore mode */
-function unlockExplore() {
-  if (exploreMode) return;
-  exploreMode = true;
-  buildMinimap();
-  document.getElementById('minimap').hidden = false;
-  document.getElementById('rail-skip').textContent = 'explore mode on';
-  document.getElementById('rail-skip').disabled = true;
+function toggleExplore() {
+  exploreMode = !exploreMode;
+  const mm = document.getElementById('minimap');
+  const btn = document.getElementById('rail-skip');
+  if (exploreMode) {
+    buildMinimap();
+    mm.hidden = false;
+    btn.textContent = '← back to tour';
+  } else {
+    mm.hidden = true;
+    btn.textContent = 'skip to explore →';
+  }
 }
-document.getElementById('rail-skip').addEventListener('click', unlockExplore);
+document.getElementById('rail-skip').addEventListener('click', toggleExplore);
+
+/* Counterfactual ghost mode (act 4) */
+let ghostMode = false;
+function setGhostMode(on) {
+  if (ghostMode === on) return;
+  ghostMode = on;
+  const b = document.getElementById('ghost-btn');
+  if (b) {
+    b.classList.toggle('is-on', on);
+    b.textContent = on ? '● back to what happened' : '◌ show the excess';
+  }
+  if (actCur === 4) updateCaption(4);
+  wake();
+}
+document.getElementById('ghost-btn').addEventListener('click', () => setGhostMode(!ghostMode));
+
+/* Held frame — the cinema "moment of silence" */
+function enterHeld(text) {
+  document.getElementById('held-text').innerHTML = text;
+  const el = document.getElementById('held-line');
+  el.hidden = false;
+  stageEl.classList.add('is-held');
+  // rAF pauses in background tabs — the timeout fallback still lands the class
+  requestAnimationFrame(() => el.classList.add('is-on'));
+  setTimeout(() => el.classList.add('is-on'), 60);
+}
+function exitHeld() {
+  const el = document.getElementById('held-line');
+  if (el.hidden) return;
+  el.classList.remove('is-on');
+  stageEl.classList.remove('is-held');
+  setTimeout(() => { el.hidden = true; }, RM ? 0 : 700);
+}
+
+/* Follow-one-dot toggle */
+document.getElementById('chip-track').addEventListener('click', (e) => {
+  e.stopPropagation();
+  trackOn = !trackOn;
+  trailLen = 0; trailHead = 0;
+  document.getElementById('chip-track').classList.toggle('is-on', trackOn);
+  updateCaption(actCur);
+  wake();
+});
 
 /* Methods popover */
 function toggleMethods(open) {
@@ -1414,6 +1873,16 @@ function toggleMethods(open) {
     <p>Population-weighted: Σcases ÷ Σpopulation × 100,000 per year — the same convention as Chart 1 (map).
     The NT multiple is computed from this at runtime
     (${f2(d3.min(YEARS, y => ntMult.get(y)))}–${f2(d3.max(YEARS, y => ntMult.get(y)))}× across 2011–2021).</p>
+    <h4>The excess (hollow dots, act 4)</h4>
+    <p>Expected NT cases at the national rate = Σ<sub>year</sub> cases ÷ NT-multiple.
+    Excess = actual − expected ≈ ${fc(Math.round(ntExcess))} of ${fc(stateTotals.get('NT'))} NT
+    hospitalisations (${f1(ntExcessFrac * 100)}%). The hollow dots mark that share inside
+    each composition band.</p>
+    <h4>Ambient layers (decorative)</h4>
+    <p>The neighbour web is a Delaunay triangulation of the dot positions (d3-delaunay);
+    act 2's elevation lines are kernel-density contours of the same positions (d3-contour).
+    Both are recomputed each time the swarm settles, encode no extra data, and are disabled
+    under reduced motion or degraded performance.</p>
     <h4>Data checks (run at load)</h4>
     <ul>
       <li class="${audit.reconciled ? 'ok' : ''}">totals reconciled: ${fc(audit.totA)} (per-state file) = ${fc(audit.totB)} (national file)</li>
@@ -1443,7 +1912,7 @@ function cinemaPlay() {
   cinemaStopTimers();
   cinema.playing = true;
   CHIP_CINEMA.textContent = '⏸ playing — tap to pause';
-  const HOLDS = [4000, 6000, 6000, 12000, 8000, 8000];
+  const HOLDS = [4000, 6000, 6000, 12000, 14000, 8000];
   let step = actCur === 5 ? 0 : actCur;   // restart from current act (or 0 after end)
   const run = () => {
     if (!cinema.playing) return;
@@ -1462,6 +1931,20 @@ function cinemaPlay() {
         }, 800);
       }, t0));
     }
+    if (step === 4) {
+      // GenAI-assisted (Claude): the held frame — ghost the excess, fade the
+      // chrome, hold one line in silence before moving on
+      const tSettle = Math.max(0, morphEnd - performance.now());
+      cinema.timeouts.push(setTimeout(() => {
+        if (!cinema.playing) return;
+        setGhostMode(true);
+        cinema.timeouts.push(setTimeout(() => {
+          if (!cinema.playing) return;
+          enterHeld(`If the Territory had run at the national rate,<br>≈${fc(Math.round(ntExcess))} people would never have been hospitalised.`);
+          cinema.timeouts.push(setTimeout(exitHeld, 5000));
+        }, 1400));
+      }, tSettle + 2000));
+    }
     cinema.timeouts.push(setTimeout(() => {
       step++;
       if (step > 5) { cinema.playing = false; CHIP_CINEMA.textContent = '▶ play all'; showEndCard(); return; }
@@ -1474,6 +1957,7 @@ function cinemaPause() {
   if (!cinema.playing) return;
   cinema.playing = false;
   cinemaStopTimers();
+  exitHeld();
   CHIP_CINEMA.textContent = '▶ resume tour';
 }
 function cinemaStopTimers() {
@@ -1495,6 +1979,8 @@ function onThemeChange() {
   ctx.fillRect(0, 0, W, H);               // kill stale trail smear
   if (exploreMode) buildMinimap();
   buildActSvg(actCur);                     // restyle runtime-coloured SVG bits
+  buildLegend(actCur);                     // recolour legend swatches for new theme
+  scheduleAmbient();                       // recolour cached web/contour layers
   rmPrev = null;                           // don't smear the old-theme snapshot
   rmFadeEnd = performance.now() + 50;      // force ≥1 painted frame past the RM/idle gate
   wake();
@@ -1504,7 +1990,7 @@ new MutationObserver(onThemeChange)
 window.addEventListener('storage', (e) => {
   if (e.key === 'rc-theme' && e.newValue && e.newValue !== document.documentElement.dataset.theme) {
     document.documentElement.dataset.theme = e.newValue;
-    const btn = document.getElementById('chip-theme');
+    const btn = document.getElementById('nav-theme-btn');
     if (btn) btn.textContent = e.newValue === 'dark' ? '☀' : '🌙';
   }
 });
@@ -1591,6 +2077,9 @@ loadData().then(() => {
   buildAllLayouts();
   dataReady = true;
   updateCaption(0);
+  buildLegend(0);
+  buildActSvg(0);                          // ghost numeral for the opening act
+  document.getElementById('dim-bar').hidden = true;
   console.info(`[showcase] ${fc(N)} dots · totals ${audit.reconciled ? 'reconciled ✓' : 'MISMATCH ✗'} · VO clamps: ${audit.voClamps} · census ${audit.censusOk ? 'ok ✓' : 'BROKEN ✗'}`);
   intro();
 }).catch(err => {

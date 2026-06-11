@@ -49,6 +49,8 @@
     <a class="nav-link" href="../sankey_v1/index.html">Chart 2 · Sankey</a>
     <a class="nav-link" href="../showcase_v1/index.html">Bonus · Swarm</a>
     <a class="nav-link" href="../about.html">About</a>
+    <span class="nav-spacer"></span>
+    <button class="nav-theme-btn" id="nav-theme-btn" type="button" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">☀</button>
   </nav>
   <main class="page">
     <header class="masthead">
@@ -61,7 +63,6 @@
         Press <kbd>Space</kbd> to play, or
         <strong>click any state</strong> to focus it.
       </p>
-      <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle light/dark mode">☀</button>
     </header>
 
     <div id="error-banner" class="error-banner" hidden role="alert"></div>
@@ -184,24 +185,24 @@
       </aside>
     </div>
 
-    <footer class="footer">
-      <p>
-        Source: BITRE hospitalised road-crash injuries; ABS state populations · CC BY 4.0.
-        Visualisation by Team 1 (Hamish Hooley &amp; Kanzen Ong).
-        Rates are always per 100,000 of <em>total</em> state population
-        (no stratified denominators available).
-        Non-trivial code blocks generated with Claude (GenAI) are marked
-        <code>// GenAI-assisted (Claude)</code> in source.
-      </p>
-    </footer>
   </main>
+  <footer class="page-footer">
+    <p>
+      Source: BITRE hospitalised road-crash injuries; ABS state populations · CC BY 4.0.
+      Visualisation by Team 1 (Hamish Hooley &amp; Kanzen Ong).
+      Rates are always per 100,000 of <em>total</em> state population
+      (no stratified denominators available).
+      Non-trivial code blocks generated with Claude (GenAI) are marked
+      <code>// GenAI-assisted (Claude)</code> in source.
+    </p>
+  </footer>
 
   <script src="map_classic_v3.js?v=4"></script>
   <script>
     // Show the right glyph when arriving with a saved light theme
-    document.getElementById('theme-toggle-btn').textContent =
+    document.getElementById('nav-theme-btn').textContent =
       document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
-    document.getElementById('theme-toggle-btn').addEventListener('click', function() {
+    document.getElementById('nav-theme-btn').addEventListener('click', function() {
       const html = document.documentElement;
       const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
       html.dataset.theme = next;

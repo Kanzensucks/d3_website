@@ -21,7 +21,7 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
   <link rel="stylesheet" href="../assets/nav.css" />
-  <link rel="stylesheet" href="showcase.css" />
+  <link rel="stylesheet" href="showcase.css?v=14" />
 </head>
 <body>
   <nav class="site-nav" aria-label="Site">
@@ -34,6 +34,8 @@
     <a class="nav-link" href="../sankey_v1/index.html">Chart 2 · Sankey</a>
     <a class="nav-link" href="index.html" aria-current="page">Bonus · Swarm</a>
     <a class="nav-link" href="../about.html">About</a>
+    <span class="nav-spacer"></span>
+    <button class="nav-theme-btn" id="nav-theme-btn" type="button" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">☀</button>
   </nav>
 
   <main class="stage" id="stage" tabindex="0"
@@ -57,22 +59,33 @@
 
     <!-- Caption card -->
     <aside class="caption-card" id="caption-card">
+      <button class="cap-collapse" id="cap-collapse" type="button"
+              aria-label="Collapse caption" title="Hide / show this caption">–</button>
       <h2 id="cap-title">One dot</h2>
       <p id="cap-body" aria-live="polite">This dot is about 50 people.</p>
-      <div class="partition-chips" id="partition-chips" hidden>
-        <button class="p-chip is-active" data-dim="ru"  type="button">Road user</button>
-        <button class="p-chip" data-dim="age" type="button">Age</button>
-        <button class="p-chip" data-dim="sex" type="button">Sex</button>
-      </div>
+      <div class="cap-legend" id="cap-legend"></div>
     </aside>
+
+    <!-- Dimension bar — visible only in Act 4, sits at bottom-centre above footer -->
+    <div class="dim-bar" id="dim-bar" hidden>
+      <span class="dim-bar-label">Split by</span>
+      <div class="partition-chips" id="partition-chips">
+        <button class="p-chip" data-dim="ru"  type="button">Road user</button>
+        <button class="p-chip" data-dim="age" type="button">Age</button>
+        <button class="p-chip is-active" data-dim="sex" type="button">Sex</button>
+      </div>
+      <span class="dim-bar-sep" aria-hidden="true"></span>
+      <button class="ghost-btn" id="ghost-btn" type="button"
+              title="Hollow out the NT hospitalisations above the national-rate expectation">◌ show the excess</button>
+    </div>
 
     <!-- Control cluster -->
     <div class="controls">
       <span class="chip" id="chip-unit" title="Each dot represents about 50 hospitalised people">● ≈ 50 people</span>
       <span class="chip chip-mode" id="chip-mode" hidden>COUNTS</span>
+      <button class="chip chip-btn" id="chip-track" type="button" title="Follow one dot — about 50 people from NT, 2020 — through every scene">◎ follow a dot</button>
       <button class="chip chip-btn" id="chip-methods" type="button" aria-haspopup="dialog" title="How this page computes its numbers">i</button>
       <button class="chip chip-btn" id="chip-cinema" type="button" title="Auto-play all six scenes">▶ play all</button>
-      <button class="chip chip-btn" id="chip-theme" type="button" title="Toggle light/dark mode">☀</button>
     </div>
 
     <!-- Scroll affordance -->
@@ -93,6 +106,9 @@
 
     <!-- Tooltip -->
     <div class="tip" id="tip" hidden></div>
+
+    <!-- Cinema held-frame overlay — one line, held in silence -->
+    <div class="held-line" id="held-line" hidden aria-hidden="true"><p id="held-text"></p></div>
 
     <!-- End card -->
     <div class="end-scrim" id="end-scrim" hidden>
@@ -118,15 +134,18 @@
       <div id="methods-body"></div>
     </div>
 
-    <p class="credit">BITRE · ABS · CC BY 4.0 · Team 1 · Hamish Hooley &amp; Kanzen Ong ·
-      Non-trivial code blocks generated with Claude (GenAI) are marked <code>// GenAI-assisted (Claude)</code> in source</p>
   </main>
 
-  <script src="showcase.js"></script>
+  <footer class="page-footer">
+    <p>BITRE · ABS · CC BY 4.0 · Team 1 · Hamish Hooley &amp; Kanzen Ong ·
+      Non-trivial code blocks generated with Claude (GenAI) are marked <code>// GenAI-assisted (Claude)</code> in source</p>
+  </footer>
+
+  <script src="showcase.js?v=18"></script>
   <script>
     // Same theme-toggle wiring as the sibling chart pages
     (function () {
-      var btn = document.getElementById('chip-theme');
+      var btn = document.getElementById('nav-theme-btn');
       btn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
       btn.addEventListener('click', function () {
         var html = document.documentElement;
