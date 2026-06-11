@@ -1922,16 +1922,21 @@ function cinemaPlay() {
     // Act 4 dimension sequence: ru (4) → age (5) → sex (6) → excess (7)
     if (step >= 4 && step <= 7) {
       targetAct = 4;
-      if (step === 5) activeDim = 'age';
-      else if (step === 6) activeDim = 'sex';
-      else if (step === 7) { activeDim = 'sex'; setGhostMode(true); }
-      else activeDim = 'ru';  // step === 4
-      // Rebuild stacks for new dimension and animate transition
-      layouts[4] = layoutStacks(activeDim);
-      retarget(layouts[4], { stagger: 'none', bow: 0 });
-      // Update chip styling
-      document.querySelectorAll('.p-chip').forEach(b =>
-        b.classList.toggle('is-active', b.dataset.dim === activeDim));
+      if (step === 7) {
+        // Excess: just enable ghost mode on current sex layout
+        setGhostMode(true);
+      } else {
+        // Switch dimension and rebuild layout
+        if (step === 5) activeDim = 'age';
+        else if (step === 6) activeDim = 'sex';
+        else activeDim = 'ru';  // step === 4
+        // Rebuild stacks for new dimension and animate transition
+        layouts[4] = layoutStacks(activeDim);
+        retarget(layouts[4], { stagger: 'none', bow: 0 });
+        // Update chip styling
+        document.querySelectorAll('.p-chip').forEach(b =>
+          b.classList.toggle('is-active', b.dataset.dim === activeDim));
+      }
     }
     goToAct(targetAct, true);
     const wait = Math.max(0, morphEnd - performance.now()) + HOLDS[step];
