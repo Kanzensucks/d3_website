@@ -1914,7 +1914,7 @@ function cinemaPlay() {
   cinemaStopTimers();
   cinema.playing = true;
   CHIP_CINEMA.textContent = '⏸ playing — tap to pause';
-  const HOLDS = [4000, 6000, 6000, 12000, 6000, 6000, 6000, 8000];
+  const HOLDS = [2000, 3000, 3000, 6000, 3000, 3000, 3000, 4000];  // halved durations
   let step = actCur === 5 ? 0 : (actCur === 4 ? 4 : actCur);
   const run = () => {
     if (!cinema.playing) return;
