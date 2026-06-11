@@ -1914,7 +1914,7 @@ function cinemaPlay() {
   cinemaStopTimers();
   cinema.playing = true;
   CHIP_CINEMA.textContent = '⏸ playing — tap to pause';
-  const HOLDS = [2000, 3000, 3000, 6000, 3000, 3000, 3000, 4000];  // halved durations
+  const HOLDS = [4000, 6000, 6000, 12000, 3000, 3000, 3000, 4000, 14000];  // Acts 1-3 normal, Act 4 halved, Act 5 normal
   let step = actCur === 5 ? 0 : (actCur === 4 ? 4 : actCur);
   const run = () => {
     if (!cinema.playing) return;
@@ -1960,7 +1960,7 @@ function cinemaPlay() {
     cinema.timeouts.push(setTimeout(() => {
       step++;
       setGhostMode(false);
-      if (step > 7) { cinema.playing = false; CHIP_CINEMA.textContent = '▶ play all'; showEndCard(); return; }
+      if (step > 8) { cinema.playing = false; CHIP_CINEMA.textContent = '▶ play all'; showEndCard(); return; }
       run();
     }, wait));
   };
