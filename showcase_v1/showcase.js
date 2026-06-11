@@ -715,8 +715,6 @@ function frame() {
   let lastA = 1, frMaxRes = 0;
   ctx.globalAlpha = 1;
 
-  // Act 3: render discs only, not individual dots
-  if (actCur !== 3) {
   for (let i = 0; i < N; i++) {
     let x, y, a = 1;
     if (settled) {
@@ -772,7 +770,6 @@ function frame() {
     const sp = sprites[ci][sz];
     const half = sp._half;
     ctx.drawImage(sp, x - half, y - half, half * 2, half * 2);
-  }
   }
   ctx.globalAlpha = 1;
   if (!settled) lastMaxRes = frMaxRes;
