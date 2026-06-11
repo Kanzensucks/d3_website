@@ -1926,8 +1926,9 @@ function cinemaPlay() {
       else if (step === 6) activeDim = 'sex';
       else if (step === 7) { activeDim = 'sex'; setGhostMode(true); }
       else activeDim = 'ru';  // step === 4
-      // Rebuild stacks for new dimension
+      // Rebuild stacks for new dimension and animate transition
       layouts[4] = layoutStacks(activeDim);
+      retarget(layouts[4], { stagger: 'none', bow: 0 });
       // Update chip styling
       document.querySelectorAll('.p-chip').forEach(b =>
         b.classList.toggle('is-active', b.dataset.dim === activeDim));
