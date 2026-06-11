@@ -1,9 +1,9 @@
 # Road Crash Injuries in Australia
 
 **COS30045 Data Visualisation — Team 1**
-Hamish Hooley & Kanzen Ong | Swinburne University of Technology | 2026 Semester 1
+Hamish Hooley (105932360) & Kanzen Ong (103518124) | Swinburne University of Technology | 2026 Semester 1
 
-An interactive data visualisation of hospitalised road crash injuries across Australian states and territories from 2011 to 2021, built with plain D3.js v7. The project is a four-page website — Home, Chart 1 (state-comparison map), Chart 2 (Sankey), and About — sharing one navigation bar and a persistent dark/light theme.
+An interactive data visualisation of hospitalised road crash injuries across Australian states and territories from 2011 to 2021, built with D3.js v7. The project includes three coordinated visualisations: Home (overview), Chart 1 (state-comparison map), Chart 2 (Sankey diagram), Bonus (unit-level swarm), and About page. All pages share one navigation bar and a persistent dark/light theme.
 
 ---
 
@@ -36,9 +36,10 @@ Then open your browser and navigate to the URL shown in the terminal (usually `h
 
 | Page | URL | What it is |
 |---|---|---|
-| Home | `http://localhost:8000/` | One-minute overview: headline finding, key statistics, national trend chart, links to both charts |
-| Chart 1 · Map | `http://localhost:8000/map_classic_v3/` | Interactive state-comparison choropleth (primary deliverable) |
-| Chart 2 · Sankey | `http://localhost:8000/sankey_v1/` | Sankey flow diagram of each state's hospitalisation burden (in progress) |
+| Home | `http://localhost:8000/` | One-minute overview: headline finding, key statistics, national trend chart, links to all charts |
+| Chart 1 · Map | `http://localhost:8000/map_classic_v3/` | Interactive state-comparison choropleth with demographic filtering |
+| Chart 2 · Sankey | `http://localhost:8000/sankey_v1/` | Sankey flow diagram of each state's hospitalisation burden by road user type |
+| Bonus · Swarm | `http://localhost:8000/showcase_v1/showcase.html` | Unit-level visualization: 8,066 dots (1 per 50 people) morphing through 6 animated acts |
 | About | `http://localhost:8000/about.html` | Team, technology, data sources, GenAI declaration, licence |
 
 Every page shares the same navigation bar, and the light/dark theme toggle persists across pages via `localStorage`.
@@ -68,12 +69,12 @@ projectttt/
 │   ├── population_clean.csv    ABS estimated resident population by state and year
 │   └── national_trend.csv      National total hospitalisation count by year
 │
-├── map_classic_v3/             Chart 1 — State comparison choropleth (main deliverable)
-├── sankey_v1/                  Chart 2 — Sankey diagram (in progress)
+├── map_classic_v3/             Chart 1 — State comparison choropleth
+├── sankey_v1/                  Chart 2 — Sankey diagram
+├── showcase_v1/                Bonus — Unit-level swarm visualization
 │
-├── DEVELOPMENT_LOG.md          Full iteration diary — every design decision logged
-├── RESEARCH.md                 Research notes, technique evaluations, references
-└── README.md                   This file
+├── README.md                   This file
+└── Design Book (PDF)           Full documentation with iteration history and usability testing
 ```
 
 > Earlier iterations (`map_classic/`, `map_classic_v2/`) and the experimental prototypes
@@ -133,6 +134,43 @@ Shows where each state's hospitalisation burden goes: select a state from the si
 
 ---
 
+### Bonus — Swarm Visualization (`showcase_v1/showcase.html`)
+
+**Open:** `http://localhost:8000/showcase_v1/showcase.html`
+
+This bonus visualization renders all 403,293 hospitalisation events as 8,066 individual dots (one dot ≈ 50 people). The dots morph through six coordinated acts, each revealing a different facet of the data.
+
+**The Six Acts:**
+
+| Act | Layout | What it shows |
+|---|---|---|
+| 1 | Phyllotaxis swarm | Scale: all dots in concentric spiral |
+| 2 | Geographic map | Location: dots clustered by state; NT dominates visually |
+| 3 | Disc chart | Trend: dots form circles; y-axis = rate per 100k, x-axis = year |
+| 4 | Stacked composition | Demographics: partition by road user type, age, or sex |
+| 5 | Road users scatter | Comparison: dots scattered by year and rate, coloured by user type |
+| 6 | End card | Summary: elapsed time counter and key takeaway |
+
+**How to use it:**
+
+| Action | What it does |
+|---|---|
+| Click **Act buttons** (1–6) or press **number keys** | Jump to any act |
+| **Arrow keys ← / →** | Step one act at a time |
+| **Space** or click **▶ play all** | Auto-play guided cinema mode through all acts |
+| **◌ show the excess** (Act 4) | Toggle ghost dots showing excess NT burden |
+| **◎ follow a dot** | Track one hospitalization across all acts |
+| **Skip to explore** | Jump to free exploration mode (Act 5) |
+
+**Key insights from the swarm:**
+
+- Act 2 immediately shows that the NT cluster is visually dominant despite smaller population
+- Act 3 reveals that the NT's high rate persists across the entire 2011–2021 period
+- Act 4 shows that the excess is not driven by one demographic; it spans all road user types, ages, and sexes
+- The animation of dots morphing between layouts makes structural patterns emotionally legible that static charts cannot
+
+---
+
 ## Data sources
 
 | Dataset | Source | Coverage |
@@ -151,37 +189,36 @@ ABS population: https://www.abs.gov.au/statistics/people/population/national-sta
 
 ## Technology
 
-- **D3.js v7 + d3-sankey** (CDN) — all charts and interactions
+- **D3.js v7 + d3-sankey** (CDN) — choropleth, Sankey, and swarm visualizations
+- **Canvas 2D API** — high-performance rendering for 8,066 dots at 60 fps
+- **Spring physics engine** — underdamped morphing animations
 - **Vanilla HTML / CSS / JavaScript** — no framework, no bundler, no preprocessor
 - **KNIME Analytics Platform** — data cleaning and CSV export pipeline
-- **Python matplotlib** — exploratory data analysis
+- **Python pandas / matplotlib** — exploratory data analysis
 
 The project intentionally has no build step. Every file can be opened and edited directly. CSS variables are defined in `:root` in each chart's own stylesheet and do not affect other charts.
 
 ---
 
-## Code structure (map_classic_v3)
+## Code structure
 
-The main JS file (`map_classic_v3.js`) is organised into numbered sections:
+**Chart 1 (`map_classic_v3/map.js`)** is organised into 11 numbered sections covering state management, data loading, scales, map rendering, interaction, and controls.
 
-| Section | Function |
-|---|---|
-| 1. Constants & state | `vizState` object holds all shared state |
-| 2. Data load + indexing | `loadData()`, `indexData()`, `indexDemographic()` |
-| 3. Scales + slice helpers | `sliceRate()`, `rebuildScalesForFilter()` |
-| 4. Map view | `drawMap()`, `refreshMap()`, `drawNTAnnotation()` |
-| 5. Focus / zoom | `selectState()`, `resetView()`, `zoomToState()` |
-| 6. Compare strip | `renderCompareStrip()`, `refreshCompareStripValues()` |
-| 7. Detail card | `renderDetailCard()`, `updateDetailForYear()`, `renderDetailChart()` |
-| 8. Breakdown bars | `renderBreakdown()` |
-| 9. Mutators | `setYear()`, `setMode()`, `setFilter()` |
-| 10. Controls | `wireSlider()`, `wirePlayPause()`, `wireFilterBar()` |
-| 11. Bootstrap | `loadData().then(...)` |
+**Chart 2 (`sankey_v1/sankey.js`)** handles Sankey layout, node rendering, flow animation, and interactivity.
 
-Non-trivial code blocks generated with Claude (GenAI) are marked `// GenAI-assisted (Claude)` inline. All generated code was reviewed and verified against the source data by the team.
+**Swarm (`showcase_v1/showcase.js`)** implements:
+- D3.js canvas sprite atlas (pre-rendered dot variants)
+- Spring physics integrator for morphing animations
+- Phyllotaxis spiral, geographic clustering, disc layout, stacked composition
+- Cinema mode sequencing with held frames
+- Follow-one-dot tracking with trail rendering
+
+Non-trivial code blocks generated with Claude (GenAI) are marked `// GenAI-assisted (Claude)` inline. All generated code was reviewed and verified by the team. See Appendix A of the Design Book for full GenAI disclosure.
 
 ---
 
-## Development history
+## Iteration and feedback
 
-See `DEVELOPMENT_LOG.md` for a complete record of every design decision, user-test quote, before/after change, and the rationale behind it. The log covers 25 logged iterations across three major versions.
+The project was developed through three major iterations of Chart 1 (map_classic, map_classic_v2, map_classic_v3) and two iterations of Chart 2 (sankey_v1, sankey_v2). The Swarm visualization was developed in a single iteration.
+
+User testing was conducted with five participants on Chart 1, producing 12 documented feedback items that drove refinements to the interaction model, colour palette, and navigation affordances. See the Design Book for full usability evaluation results.
