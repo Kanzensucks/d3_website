@@ -1706,7 +1706,7 @@ canvas.addEventListener('mousemove', (e) => {
       }
       return false;
     });
-    lensSet = set.size ? set : null;
+    lensSet = null;  // lens effect disabled
     wake();
   }
   const i = quad.find(mouse.x, mouse.y, 14);
