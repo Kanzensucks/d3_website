@@ -1,0 +1,160 @@
+<!doctype html>
+<!-- GenAI-assisted (Claude) -->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Territory Anomaly · road-crash hospitalisations 2011–2021</title>
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="The Territory Anomaly — one swarm, six movements" />
+  <meta property="og:description" content="403,293 road-crash hospitalisations, 2011–2021, as one living swarm. The NT ran 1.31–2.19× the national rate — above average all 11 years." />
+  <meta name="twitter:card"        content="summary" />
+  <meta name="twitter:title"       content="The Territory Anomaly — one swarm, six movements" />
+  <meta name="twitter:description" content="403,293 road-crash hospitalisations as one living swarm. The NT ran 1.31–2.19× the national rate — above average all 11 years." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e8523a'/%3E%3Ctext x='4' y='22' font-size='16' font-weight='700' fill='white' font-family='sans-serif'%3ENT%3C/text%3E%3C/svg%3E" />
+  <link rel="preload" href="data/state_year_per100k.csv"  as="fetch" crossorigin />
+  <link rel="preload" href="data/national_trend.csv"      as="fetch" crossorigin />
+  <link rel="preload" href="data/state_year_roaduser.csv" as="fetch" crossorigin />
+  <link rel="preload" href="data/state_year_age.csv"      as="fetch" crossorigin />
+  <link rel="preload" href="data/state_year_sex.csv"      as="fetch" crossorigin />
+  <link rel="preload" href="data/aus_states.geojson"      as="fetch" crossorigin />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('rc-theme') || 'dark';</script>
+  <link rel="stylesheet" href="assets/nav.css" />
+  <link rel="stylesheet" href="showcase_v1/showcase.css?v=14" />
+</head>
+<body>
+  <nav class="site-nav" aria-label="Site">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">NT</span>
+      <span class="brand-text">Road Trauma · AUS</span>
+    </a>
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="map_classic_v3/index.html">Chart 1 · Map</a>
+    <a class="nav-link" href="sankey_v1/index.html">Chart 2 · Sankey</a>
+    <a class="nav-link" href="showcase_v1.html" aria-current="page">Bonus · Swarm</a>
+    <a class="nav-link" href="about.html">About</a>
+    <span class="nav-spacer"></span>
+    <button class="nav-theme-btn" id="nav-theme-btn" type="button" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">☀</button>
+  </nav>
+
+  <main class="stage" id="stage" tabindex="0"
+        aria-label="Animated unit visualisation: 403,293 road-crash hospitalisations as a swarm of dots morphing through six scenes. Use arrow keys or number keys 1 to 6 to step between scenes.">
+    <canvas id="swarm" aria-hidden="true"></canvas>
+    <svg id="anno" aria-hidden="true"></svg>
+
+    <!-- Header overlay -->
+    <header class="hdr">
+      <p class="hdr-kicker">COS30045 · Bonus showcase · BITRE 2011–2021</p>
+      <h1 class="hdr-title">The Territory <span class="hl">Anomaly</span></h1>
+      <div class="hdr-counters">
+        <span id="hdr-total" class="hdr-counter">—</span>
+        <span id="hdr-minutes" class="hdr-counter hdr-minutes"></span>
+      </div>
+    </header>
+
+    <!-- Progress rail -->
+    <nav class="rail" id="rail" aria-label="Scene navigation"></nav>
+    <button class="rail-skip" id="rail-skip" type="button" title="Skip the guided tour and explore freely">skip to explore →</button>
+
+    <!-- Caption card -->
+    <aside class="caption-card" id="caption-card">
+      <button class="cap-collapse" id="cap-collapse" type="button"
+              aria-label="Collapse caption" title="Hide / show this caption">–</button>
+      <h2 id="cap-title">One dot</h2>
+      <p id="cap-body" aria-live="polite">This dot is about 50 people.</p>
+      <div class="cap-legend" id="cap-legend"></div>
+    </aside>
+
+    <!-- Dimension bar — visible only in Act 4, sits at bottom-centre above footer -->
+    <div class="dim-bar" id="dim-bar" hidden>
+      <span class="dim-bar-label">Split by</span>
+      <div class="partition-chips" id="partition-chips">
+        <button class="p-chip" data-dim="ru"  type="button">Road user</button>
+        <button class="p-chip" data-dim="age" type="button">Age</button>
+        <button class="p-chip is-active" data-dim="sex" type="button">Sex</button>
+      </div>
+      <span class="dim-bar-sep" aria-hidden="true"></span>
+      <button class="ghost-btn" id="ghost-btn" type="button"
+              title="Hollow out the NT hospitalisations above the national-rate expectation">◌ show the excess</button>
+    </div>
+
+    <!-- Control cluster -->
+    <div class="controls">
+      <span class="chip" id="chip-unit" title="Each dot represents about 50 hospitalised people">● ≈ 50 people</span>
+      <span class="chip chip-mode" id="chip-mode" hidden>COUNTS</span>
+      <button class="chip chip-btn" id="chip-track" type="button" title="Follow one dot — about 50 people from NT, 2020 — through every scene">◎ follow a dot</button>
+      <button class="chip chip-btn" id="chip-methods" type="button" aria-haspopup="dialog" title="How this page computes its numbers">i</button>
+      <button class="chip chip-btn" id="chip-cinema" type="button" title="Auto-play all six scenes">▶ play all</button>
+    </div>
+
+    <!-- Scroll affordance -->
+    <div class="scroll-hint" id="scroll-hint">scroll or press ↓</div>
+
+    <!-- State detail panel -->
+    <aside class="detail-panel" id="detail-panel" hidden>
+      <button class="dp-close" id="dp-close" type="button" aria-label="Close state detail">×</button>
+      <div id="dp-head"></div>
+      <div id="dp-rows"></div>
+    </aside>
+
+    <!-- Explore minimap -->
+    <div class="minimap" id="minimap" hidden>
+      <p class="mm-title">Rate per 100k · click to inspect</p>
+      <svg id="mm-svg"></svg>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tip" id="tip" hidden></div>
+
+    <!-- Cinema held-frame overlay — one line, held in silence -->
+    <div class="held-line" id="held-line" hidden aria-hidden="true"><p id="held-text"></p></div>
+
+    <!-- End card -->
+    <div class="end-scrim" id="end-scrim" hidden>
+      <div class="end-card">
+        <p class="end-kicker">2011 – 2021 · Australia</p>
+        <h2 id="end-headline">—</h2>
+        <ul id="end-stats"></ul>
+        <div class="end-actions">
+          <button class="end-btn end-primary" id="end-explore" type="button">Explore the data →</button>
+          <button class="end-btn" id="end-replay" type="button">Replay</button>
+        </div>
+        <p class="end-links">
+          <a href="map_classic_v3/index.html">Chart 1 · Map</a> ·
+          <a href="sankey_v1/index.html">Chart 2 · Sankey</a> ·
+          <a href="index.html">Home</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Methods popover -->
+    <div class="methods-pop" id="methods-pop" hidden role="dialog" aria-label="Methods and data notes">
+      <button class="dp-close" id="methods-close" type="button" aria-label="Close methods">×</button>
+      <div id="methods-body"></div>
+    </div>
+
+  </main>
+
+  <footer class="page-footer">
+    <p>BITRE · ABS · CC BY 4.0 · Team 1 · Hamish Hooley &amp; Kanzen Ong ·
+      Non-trivial code blocks generated with Claude (GenAI) are marked <code>// GenAI-assisted (Claude)</code> in source</p>
+  </footer>
+
+  <script src="showcase_v1/showcase.js?v=26"></script>
+  <script>
+    // Same theme-toggle wiring as the sibling chart pages
+    (function () {
+      var btn = document.getElementById('nav-theme-btn');
+      btn.textContent = document.documentElement.dataset.theme === 'dark' ? '☀' : '🌙';
+      btn.addEventListener('click', function () {
+        var html = document.elementRoot;
+        var next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+        html.dataset.theme = next;
+        try { localStorage.setItem('rc-theme', next); } catch (e) {}
+        this.textContent = next === 'dark' ? '☀' : '🌙';
+      });
+    })();
+  </script>
+</body>
+</html>
