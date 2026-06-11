@@ -1926,6 +1926,11 @@ function cinemaPlay() {
       else if (step === 6) activeDim = 'sex';
       else if (step === 7) { activeDim = 'sex'; setGhostMode(true); }
       else activeDim = 'ru';  // step === 4
+      // Rebuild stacks for new dimension
+      layouts[4] = layoutStacks(activeDim);
+      // Update chip styling
+      document.querySelectorAll('.p-chip').forEach(b =>
+        b.classList.toggle('is-active', b.dataset.dim === activeDim));
     }
     goToAct(targetAct, true);
     const wait = Math.max(0, morphEnd - performance.now()) + HOLDS[step];
