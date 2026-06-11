@@ -1012,6 +1012,7 @@ const ACT_DEFS = [
   { label: '05 · road users',     title: 'Eleven years, one stream' },
 ];
 let actCur = 0, activeDim = 'sex', focusYear = null, exploreMode = false;
+let inAct3 = false;
 let dataReady = false, totalCounted = false;
 let actTimeouts = [];
 function later(ms, fn) { actTimeouts.push(setTimeout(fn, RM ? 0 : ms)); }
@@ -1037,6 +1038,7 @@ function goToAct(a, viaCinema = false) {
   spotlight = null;
   const prev = actCur;
   actCur = a;
+  inAct3 = (a === 3);
   document.getElementById('scroll-hint').classList.add('is-gone');
 
   if (prev === 3 && a !== 3) { discLeaveT = performance.now(); }
