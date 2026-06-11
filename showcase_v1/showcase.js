@@ -1914,11 +1914,20 @@ function cinemaPlay() {
   cinemaStopTimers();
   cinema.playing = true;
   CHIP_CINEMA.textContent = '⏸ playing — tap to pause';
-  const HOLDS = [4000, 6000, 6000, 12000, 14000, 8000];
-  let step = actCur === 5 ? 0 : actCur;   // restart from current act (or 0 after end)
+  const HOLDS = [4000, 6000, 6000, 12000, 6000, 6000, 6000, 8000];
+  let step = actCur === 5 ? 0 : (actCur === 4 ? 4 : actCur);
   const run = () => {
     if (!cinema.playing) return;
-    goToAct(step, true);
+    let targetAct = step;
+    // Act 4 dimension sequence: ru (4) → age (5) → sex (6) → excess (7)
+    if (step >= 4 && step <= 7) {
+      targetAct = 4;
+      if (step === 5) activeDim = 'age';
+      else if (step === 6) activeDim = 'sex';
+      else if (step === 7) { activeDim = 'sex'; setGhostMode(true); }
+      else activeDim = 'ru';  // step === 4
+    }
+    goToAct(targetAct, true);
     const wait = Math.max(0, morphEnd - performance.now()) + HOLDS[step];
     if (step === 3) {
       // automatic year sweep
@@ -1933,23 +1942,19 @@ function cinemaPlay() {
         }, 800);
       }, t0));
     }
-    if (step === 4) {
-      // GenAI-assisted (Claude): the held frame — ghost the excess, fade the
-      // chrome, hold one line in silence before moving on
+    if (step === 7) {
+      // held frame — ghost the excess
       const tSettle = Math.max(0, morphEnd - performance.now());
       cinema.timeouts.push(setTimeout(() => {
         if (!cinema.playing) return;
-        setGhostMode(true);
-        cinema.timeouts.push(setTimeout(() => {
-          if (!cinema.playing) return;
-          enterHeld(`If the Territory had run at the national rate,<br>≈${fc(Math.round(ntExcess))} people would never have been hospitalised.`);
-          cinema.timeouts.push(setTimeout(exitHeld, 5000));
-        }, 1400));
+        enterHeld(`If the Territory had run at the national rate,<br>≈${fc(Math.round(ntExcess))} people would never have been hospitalised.`);
+        cinema.timeouts.push(setTimeout(exitHeld, 5000));
       }, tSettle + 2000));
     }
     cinema.timeouts.push(setTimeout(() => {
       step++;
-      if (step > 5) { cinema.playing = false; CHIP_CINEMA.textContent = '▶ play all'; showEndCard(); return; }
+      setGhostMode(false);
+      if (step > 7) { cinema.playing = false; CHIP_CINEMA.textContent = '▶ play all'; showEndCard(); return; }
       run();
     }, wait));
   };
