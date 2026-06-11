@@ -716,6 +716,8 @@ function frame() {
   ctx.globalAlpha = 1;
 
   for (let i = 0; i < N; i++) {
+    // Skip dot rendering in Act 3 when settled (discs only)
+    if (actCur === 3 && settled) continue;
     let x, y, a = 1;
     if (settled) {
       x = tgtX[i];
@@ -1725,7 +1727,11 @@ canvas.addEventListener('click', (e) => {
     if (settled) emitWave(mx, my, 16);    // tap the swarm — it ripples
     return;
   }
-  // Act 3 discs are non-interactive in swarm
+  if (!settled) return;
+  for (const d of discs) {
+    if (Math.hypot(d.x - mx, d.y - my) <= d.r + 2) { openPanel(d.si); return; }
+  }
+  if (panelOpen) closePanel();
 });
 
 /* Partition chips */
