@@ -3,6 +3,10 @@
 **COS30045 Data Visualisation — Team 1**
 Hamish Hooley (105932360) & Kanzen Ong (103518124) | Swinburne University of Technology | 2026 Semester 1
 
+### 🔗 Live site: **https://kanzenwashere.github.io/d3_website/**
+
+No setup needed — open the link in any browser. (Deployed via GitHub Pages; every push to `main` redeploys automatically.)
+
 An interactive data visualisation of hospitalised road crash injuries across Australian states and territories from 2011 to 2021, built with D3.js v7. The project includes three coordinated visualisations: Home (overview), Chart 1 (state-comparison map), Chart 2 (Sankey diagram), Bonus (unit-level swarm), and About page. All pages share one navigation bar and a persistent dark/light theme.
 
 ---
